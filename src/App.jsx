@@ -22,9 +22,9 @@ function getTodayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-// Game number = days since launch (Nov 17, 2026)
+// Game number = days since Nov 1 (so Nov 17 = #17)
 function getGameNumber(dateStr) {
-  const launch = new Date('2026-11-17T00:00:00')
+  const launch = new Date('2026-11-01T00:00:00')
   const today = new Date(dateStr + 'T00:00:00')
   return Math.floor((today - launch) / 86400000) + 1
 }

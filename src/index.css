@@ -444,3 +444,13 @@ input[type="text"].game-input.input-wrong {
 .bg-depth-transition {
   transition: background 1.5s ease-in-out;
 }
+
+/* EKG line animation */
+@keyframes ekgDash {
+  0% { stroke-dashoffset: 800; }
+  100% { stroke-dashoffset: 0; }
+}
+.ekg-line {
+  stroke-dasharray: 800;
+  animation: ekgDash 4s linear infinite;
+}
