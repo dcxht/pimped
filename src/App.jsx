@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { Analytics } from '@vercel/analytics/react'
 import HomeScreen from './components/HomeScreen'
 import GameScreen from './components/GameScreen'
 import ResultScreen from './components/ResultScreen'
@@ -160,6 +161,7 @@ export default function App() {
           onHome={handleBackHome}
         />
       )}
+      <Analytics />
     </>
   )
 }
