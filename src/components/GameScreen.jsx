@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 
 const TIMER_DURATION = 25000
 const TOTAL_PROMPTS = 5
@@ -20,30 +20,24 @@ const TIER_POINTS = {
 }
 
 const TIER_COLORS_HEX = {
-  0: '#22c55e',
-  1: '#eab308',
-  2: '#f97316',
-  3: '#a855f7',
-  4: '#ec4899',
+  0: '#00ff88',
+  1: '#ffdd00',
+  2: '#ff8800',
+  3: '#c466ff',
+  4: '#ff44aa',
 }
 
-const TIER_BG_CLASSES = {
-  0: 'bg-green-50',
-  1: 'bg-yellow-50',
-  2: 'bg-orange-50',
-  3: 'bg-purple-50',
-  4: 'bg-pink-50',
-}
-
-const MILESTONES = [
-  { label: 'Intern', score: 0, color: '#94a3b8' },
-  { label: 'Med Student', score: 500, color: '#eab308' },
-  { label: 'Resident', score: 1000, color: '#f97316' },
-  { label: 'Attending', score: 1500, color: '#a855f7' },
-  { label: 'Professor', score: 2000, color: '#ec4899' },
+const DEPTH_FLOORS = [
+  { label: 'LOBBY', depth: '0m', score: 0 },
+  { label: 'WARD', depth: '500m', score: 500 },
+  { label: 'ICU', depth: '1000m', score: 1000 },
+  { label: 'OR', depth: '1500m', score: 1500 },
+  { label: "CHIEF'S OFFICE", depth: '2000m', score: 2000 },
 ]
 
 const MAX_SCORE = 2500
+
+const MEDICAL_SYMBOLS = ['+', 'Rx', 'Dx', 'Hx', 'Tx', 'Sx', 'ECG', 'BP', 'HR', 'SpO2']
 
 function normalize(s) {
   return s.toLowerCase().trim().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ')
@@ -71,129 +65,55 @@ function getAnswerPercentage(answer, answers) {
   return percentages[tier] ?? 5
 }
 
-// Specialty pill colors
-function specialtyColor(specialty) {
-  const s = (specialty || '').toLowerCase()
-  if (s.includes('cardio')) return { bg: '#fef2f2', text: '#dc2626' }
-  if (s.includes('neuro')) return { bg: '#f0f9ff', text: '#0369a1' }
-  if (s.includes('gi') || s.includes('gastro')) return { bg: '#fefce8', text: '#a16207' }
-  if (s.includes('pulm') || s.includes('resp')) return { bg: '#ecfdf5', text: '#047857' }
-  if (s.includes('renal') || s.includes('neph')) return { bg: '#fdf4ff', text: '#9333ea' }
-  if (s.includes('endo')) return { bg: '#fff7ed', text: '#c2410c' }
-  if (s.includes('heme') || s.includes('onc')) return { bg: '#fdf2f8', text: '#be185d' }
-  if (s.includes('derm')) return { bg: '#fffbeb', text: '#b45309' }
-  if (s.includes('id') || s.includes('infect')) return { bg: '#f0fdf4', text: '#15803d' }
-  return { bg: '#f5f3ff', text: '#6d28d9' }
+// Depth-based background color
+function getDepthBackground(score) {
+  const pct = Math.min(score / MAX_SCORE, 1)
+  // Interpolate from lobby (lighter teal) to deep (dark navy)
+  const r = Math.round(26 - pct * 20)
+  const g = Math.round(58 - pct * 44)
+  const b = Math.round(74 - pct * 48)
+  const r2 = Math.round(15 - pct * 9)
+  const g2 = Math.round(34 - pct * 20)
+  const b2 = Math.round(53 - pct * 35)
+  return `linear-gradient(180deg, rgb(${r},${g},${b}) 0%, rgb(${r2},${g2},${b2}) 50%, #060e1a 100%)`
 }
 
-// Circular timer component
-function CircularTimer({ timeLeft, duration }) {
-  const seconds = Math.ceil(timeLeft / 1000)
-  const progress = timeLeft / duration
-  const isLow = seconds <= 5
-  const radius = 40
-  const circumference = 2 * Math.PI * radius
-  const strokeOffset = circumference * (1 - progress)
-  const color = isLow ? '#ef4444' : '#4571FF'
+// Floating medical symbols
+function FloatingSymbols() {
+  const symbols = useMemo(() => {
+    return Array.from({ length: 12 }, (_, i) => ({
+      id: i,
+      symbol: MEDICAL_SYMBOLS[i % MEDICAL_SYMBOLS.length],
+      left: Math.random() * 100,
+      duration: 18 + Math.random() * 20,
+      delay: Math.random() * 18,
+      size: 11 + Math.random() * 10,
+    }))
+  }, [])
 
   return (
-    <div className={`relative inline-flex items-center justify-center ${isLow && timeLeft > 0 ? 'timer-pulse' : ''}`}>
-      <svg width="100" height="100" className="transform -rotate-90">
-        {/* Background circle */}
-        <circle
-          cx="50" cy="50" r={radius}
-          stroke="#e5e2da"
-          strokeWidth="6"
-          fill="none"
-        />
-        {/* Progress arc */}
-        <circle
-          cx="50" cy="50" r={radius}
-          stroke={color}
-          strokeWidth="6"
-          fill="none"
-          strokeLinecap="round"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeOffset}
-          className="transition-[stroke-dashoffset] duration-100 ease-linear"
-        />
-      </svg>
-      {/* Seconds in center */}
-      <span
-        className="absolute font-mono font-bold text-3xl transition-colors duration-200"
-        style={{ color }}
-      >
-        {seconds}
-      </span>
-    </div>
-  )
-}
-
-// Score meter component
-function ScoreMeter({ score, animatedScore }) {
-  const displayScore = animatedScore
-  const pct = Math.min((displayScore / MAX_SCORE) * 100, 100)
-
-  return (
-    <div className="w-full">
-      {/* Milestone labels */}
-      <div className="relative h-6 mb-1">
-        {MILESTONES.map((m) => {
-          const left = (m.score / MAX_SCORE) * 100
-          const isActive = displayScore >= m.score
-          return (
-            <span
-              key={m.label}
-              className="absolute text-[10px] font-bold tracking-wide uppercase transition-all duration-500 whitespace-nowrap"
-              style={{
-                left: `${left}%`,
-                transform: 'translateX(-50%)',
-                color: isActive ? m.color : '#c4c0b8',
-              }}
-            >
-              {m.label}
-            </span>
-          )
-        })}
-      </div>
-
-      {/* Bar track */}
-      <div className="relative w-full h-3 rounded-full bg-[#e5e2da] overflow-hidden">
-        {/* Filled bar */}
-        <div
-          className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out"
+    <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+      {symbols.map((s) => (
+        <span
+          key={s.id}
+          className="float-symbol"
           style={{
-            width: `${pct}%`,
-            background: `linear-gradient(90deg, #22c55e 0%, #eab308 30%, #f97316 50%, #a855f7 75%, #ec4899 100%)`,
+            left: `${s.left}%`,
+            animationDuration: `${s.duration}s`,
+            animationDelay: `${s.delay}s`,
+            fontSize: `${s.size}px`,
           }}
-        />
-        {/* Milestone tick marks */}
-        {MILESTONES.slice(1).map((m) => {
-          const left = (m.score / MAX_SCORE) * 100
-          return (
-            <div
-              key={m.label}
-              className="absolute top-0 bottom-0 w-0.5 bg-white/50"
-              style={{ left: `${left}%` }}
-            />
-          )
-        })}
-      </div>
-
-      {/* Score number */}
-      <div className="text-center mt-1">
-        <span className="font-mono font-bold text-sm" style={{ color: '#1a1a1a' }}>
-          {Math.round(displayScore)} pts
+        >
+          {s.symbol}
         </span>
-      </div>
+      ))}
     </div>
   )
 }
 
-// Confetti burst component
+// Confetti burst
 function Confetti({ active }) {
   if (!active) return null
-  // 20 confetti particles
   const particles = Array.from({ length: 20 }, (_, i) => i)
   return (
     <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
@@ -224,16 +144,38 @@ function Confetti({ active }) {
   )
 }
 
+// Depth markers on the right side
+function DepthMarkers({ score }) {
+  return (
+    <div className="absolute right-3 top-16 bottom-20 flex flex-col justify-between z-10 pointer-events-none">
+      {DEPTH_FLOORS.map((floor) => {
+        const isActive = score >= floor.score
+        return (
+          <div
+            key={floor.label}
+            className={`depth-marker text-right ${isActive ? 'active' : ''}`}
+            style={{ transition: 'all 0.5s ease' }}
+          >
+            <div style={{ fontSize: '8px', letterSpacing: '0.12em' }}>{floor.label}</div>
+            <div style={{ fontSize: '10px', fontWeight: 700 }}>{floor.depth}</div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 export default function GameScreen({ prompts, onFinish }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [input, setInput] = useState('')
-  const [phase, setPhase] = useState('answering') // 'answering' | 'reveal'
+  const [phase, setPhase] = useState('answering')
   const [timeLeft, setTimeLeft] = useState(TIMER_DURATION)
   const [results, setResults] = useState([])
   const [shaking, setShaking] = useState(false)
   const [wrongMessage, setWrongMessage] = useState(false)
+  const [wrongFlash, setWrongFlash] = useState(false)
   const [revealData, setRevealData] = useState(null)
-  const [slideDirection, setSlideDirection] = useState('in') // 'in' | 'out'
+  const [slideDirection, setSlideDirection] = useState('in')
   const [animatedScore, setAnimatedScore] = useState(0)
   const [showConfetti, setShowConfetti] = useState(false)
   const [revealVisible, setRevealVisible] = useState(false)
@@ -259,7 +201,6 @@ export default function GameScreen({ prompts, onFinish }) {
     function tick(now) {
       const elapsed = now - startTime
       const progress = Math.min(elapsed / duration, 1)
-      // Ease out cubic
       const eased = 1 - Math.pow(1 - progress, 3)
       setAnimatedScore(start + (target - start) * eased)
 
@@ -298,13 +239,11 @@ export default function GameScreen({ prompts, onFinish }) {
     setRevealData(result)
     setResults(prev => [...prev, result])
 
-    // Professor tier confetti
     if (tier === 4) {
       setShowConfetti(true)
       setTimeout(() => setShowConfetti(false), 1500)
     }
 
-    // Slide-up reveal with slight delay
     setTimeout(() => setRevealVisible(true), 50)
   }, [currentIndex, stopTimer])
 
@@ -325,16 +264,15 @@ export default function GameScreen({ prompts, onFinish }) {
     } else {
       setShaking(true)
       setWrongMessage(true)
-      setTimeout(() => {
-        setShaking(false)
-      }, 500)
+      setWrongFlash(true)
+      setTimeout(() => setShaking(false), 500)
       setTimeout(() => setWrongMessage(false), 2000)
+      setTimeout(() => setWrongFlash(false), 500)
       setInput('')
       if (inputRef.current) inputRef.current.focus()
     }
   }, [input, prompt, handleReveal])
 
-  // Timer auto-submit on expiry
   const handleTimerExpiry = useCallback(() => {
     const typed = input.trim()
     if (typed) {
@@ -354,7 +292,6 @@ export default function GameScreen({ prompts, onFinish }) {
     timerExpiryRef.current = handleTimerExpiry
   }, [handleTimerExpiry])
 
-  // Start timer when entering answering phase
   useEffect(() => {
     if (phase !== 'answering') return
 
@@ -381,14 +318,12 @@ export default function GameScreen({ prompts, onFinish }) {
     }
   }, [phase, currentIndex])
 
-  // Focus input when answering
   useEffect(() => {
     if (phase === 'answering' && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 300)
     }
   }, [phase, currentIndex])
 
-  // Slide-in animation on prompt change
   useEffect(() => {
     setSlideDirection('in')
   }, [currentIndex])
@@ -417,60 +352,122 @@ export default function GameScreen({ prompts, onFinish }) {
     }
   }
 
-  const spColor = specialtyColor(prompt.specialty)
+  const timerProgress = timeLeft / TIMER_DURATION
+  const isTimerLow = Math.ceil(timeLeft / 1000) <= 5
+  const depthBg = getDepthBackground(totalScore)
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-cream relative overflow-hidden">
+    <div
+      className="min-h-[100dvh] flex flex-col relative overflow-hidden bg-depth-transition"
+      style={{ background: depthBg }}
+    >
       <Confetti active={showConfetti} />
+      <FloatingSymbols />
+      <DepthMarkers score={totalScore} />
 
-      {/* ---- HEADER ---- */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <span className="font-bold text-sm tracking-widest uppercase" style={{ color: '#1a1a1a' }}>
-          PIMPED
-        </span>
-        <span className="font-mono font-bold text-sm" style={{ color: '#1a1a1a' }}>
-          {currentIndex + 1}/{TOTAL_PROMPTS}
-        </span>
+      {/* Wrong answer red flash on edges */}
+      {wrongFlash && (
+        <div
+          className="fixed inset-0 pointer-events-none z-40 wrong-flash"
+          style={{
+            boxShadow: 'inset 0 0 80px rgba(255, 68, 68, 0.4), inset 0 0 160px rgba(255, 68, 68, 0.2)',
+          }}
+        />
+      )}
+
+      {/* TIMER BAR - thin bar at very top */}
+      {phase === 'answering' && (
+        <div className="absolute top-0 left-0 right-0 z-30" style={{ height: '3px', background: 'rgba(255,255,255,0.05)' }}>
+          <div
+            className={`timer-bar ${isTimerLow ? 'timer-low' : ''}`}
+            style={{ width: `${timerProgress * 100}%` }}
+          />
+        </div>
+      )}
+
+      {/* HUD BAR */}
+      <div className="relative z-20 flex items-center justify-between px-4 pt-5 pb-2">
+        {/* Left: Depth */}
+        <div>
+          <div className="hud-label">DEPTH</div>
+          <div className="mono text-lg font-bold" style={{ color: 'var(--accent)' }}>
+            {Math.round(animatedScore)}m
+          </div>
+        </div>
+
+        {/* Center: Progress blocks */}
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: TOTAL_PROMPTS }, (_, i) => {
+            const r = results[i]
+            let classes = 'progress-block'
+            if (r) {
+              classes += ' filled'
+            } else if (i === currentIndex) {
+              classes += ' current'
+            }
+            return <div key={i} className={classes} />
+          })}
+        </div>
+
+        {/* Right: Score */}
+        <div className="text-right">
+          <div className="hud-label">SCORE</div>
+          <div className="mono text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+            {Math.round(animatedScore)}
+          </div>
+        </div>
       </div>
 
-      {/* Specialty pill */}
-      <div className="px-4 pb-3">
+      {/* Specialty tag */}
+      <div className="relative z-20 px-4 pb-2">
         <span
-          className="inline-block text-xs font-bold tracking-wider uppercase px-3 py-1 rounded-full"
-          style={{ backgroundColor: spColor.bg, color: spColor.text }}
+          className="mono text-xs font-bold tracking-wider uppercase px-2.5 py-1 rounded-md inline-block"
+          style={{
+            background: 'rgba(0, 229, 255, 0.08)',
+            color: 'var(--accent)',
+            border: '1px solid rgba(0, 229, 255, 0.2)',
+          }}
         >
           {prompt.specialty}
         </span>
       </div>
 
-      {/* ---- SCORE METER ---- */}
-      <div className="px-4 pb-3">
-        <ScoreMeter score={totalScore} animatedScore={animatedScore} />
-      </div>
+      {/* MAIN CONTENT */}
+      <div className="flex-1 flex flex-col px-4 pb-4 relative z-20">
 
-      {/* ---- MAIN CONTENT ---- */}
-      <div className="flex-1 flex flex-col px-4 pb-4">
-
-        {/* Timer */}
+        {/* Timer seconds (small, inline) */}
         {phase === 'answering' && (
-          <div className="flex justify-center py-2">
-            <CircularTimer timeLeft={timeLeft} duration={TIMER_DURATION} />
+          <div className="text-center py-2">
+            <span
+              className={`mono text-2xl font-bold ${isTimerLow && timeLeft > 0 ? 'timer-pulse' : ''}`}
+              style={{
+                color: isTimerLow ? 'var(--wrong)' : 'var(--accent)',
+                textShadow: isTimerLow
+                  ? '0 0 15px rgba(255,68,68,0.5)'
+                  : '0 0 15px var(--accent-dim)',
+              }}
+            >
+              {Math.ceil(timeLeft / 1000)}
+            </span>
           </div>
         )}
 
         {/* Prompt text */}
         <div
-          className={`text-center text-xl sm:text-2xl font-semibold leading-relaxed px-2 py-4 prompt-${slideDirection}`}
-          style={{ color: '#1a1a1a' }}
+          className={`text-center text-xl sm:text-2xl font-semibold leading-relaxed px-2 py-6 prompt-${slideDirection}`}
+          style={{ color: 'var(--text-primary)' }}
         >
           {prompt.prompt}
         </div>
 
-        {/* ---- ANSWERING PHASE ---- */}
+        {/* ANSWERING PHASE */}
         {phase === 'answering' && (
           <div className="mt-auto space-y-3 pb-safe">
             {/* Wrong answer feedback */}
-            <div className={`text-center text-sm font-semibold transition-all duration-300 ${wrongMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`} style={{ color: '#ef4444', minHeight: '20px' }}>
+            <div
+              className={`text-center mono text-sm font-semibold transition-all duration-300 ${wrongMessage ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'}`}
+              style={{ color: 'var(--wrong)', minHeight: '20px' }}
+            >
               Not on the answer sheet
             </div>
 
@@ -483,92 +480,99 @@ export default function GameScreen({ prompts, onFinish }) {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder="Type your answer..."
-                className={`w-full px-5 py-4 rounded-2xl text-lg border-2 outline-none transition-all duration-200 ${
-                  shaking
-                    ? 'border-red-400 bg-red-50'
-                    : 'border-[#e5e2da] bg-white focus:border-[#4571FF] focus:shadow-[0_0_0_3px_rgba(69,113,255,0.1)]'
-                }`}
-                style={{ color: '#1a1a1a', fontSize: '18px' }}
+                className={`game-input ${shaking ? 'input-wrong' : ''}`}
                 autoComplete="off"
                 autoCapitalize="off"
                 spellCheck={false}
               />
             </div>
 
-            {/* Submit button */}
-            <button
-              onClick={() => {
-                setSubmitPressed(true)
-                setTimeout(() => setSubmitPressed(false), 150)
-                handleSubmit()
-              }}
-              disabled={!input.trim()}
-              className={`w-full py-4 rounded-2xl text-lg font-bold text-white transition-all duration-150 active:scale-[0.97] disabled:opacity-40 disabled:cursor-not-allowed ${submitPressed ? 'scale-[0.97]' : 'scale-100'}`}
-              style={{ backgroundColor: input.trim() ? '#4571FF' : '#94a3b8' }}
-            >
-              Submit
-            </button>
-
-            {/* Pass button */}
-            <button
-              onClick={handlePass}
-              className="w-full py-2.5 text-sm font-semibold tracking-wide uppercase transition-all duration-150 active:scale-[0.98] rounded-xl"
-              style={{ color: '#9b9b9b' }}
-            >
-              Pass
-            </button>
+            {/* Submit + Pass row */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setSubmitPressed(true)
+                  setTimeout(() => setSubmitPressed(false), 150)
+                  handleSubmit()
+                }}
+                disabled={!input.trim()}
+                className={`btn-game-primary flex-1 py-4 rounded-xl text-base ${submitPressed ? 'scale-[0.97]' : 'scale-100'}`}
+                style={{ transition: 'all 0.15s ease' }}
+              >
+                SUBMIT
+              </button>
+              <button
+                onClick={handlePass}
+                className="btn-game px-6 py-4 rounded-xl text-sm"
+              >
+                PASS
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ---- REVEAL PHASE ---- */}
+        {/* REVEAL PHASE */}
         {phase === 'reveal' && revealData && (
           <div
             className={`mt-auto pb-safe transition-all duration-500 ease-out ${revealVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
           >
             {/* Result card */}
-            <div className="rounded-3xl p-6 mb-4 shadow-lg border border-white/60 bg-white">
+            <div
+              className="rounded-xl p-6 mb-4 border"
+              style={{
+                background: 'rgba(10, 22, 40, 0.8)',
+                borderColor: revealData.tier >= 0
+                  ? `${TIER_COLORS_HEX[revealData.tier]}40`
+                  : 'rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(12px)',
+              }}
+            >
               {revealData.passed ? (
                 <div className="text-center space-y-2">
-                  <div className="text-5xl mb-2">---</div>
-                  <div className="text-gray-400 text-lg font-semibold">Passed</div>
-                  <div className="text-3xl font-bold text-gray-300 font-mono">+0</div>
+                  <div className="text-4xl mb-2 mono" style={{ color: 'var(--text-muted)' }}>---</div>
+                  <div className="mono text-lg font-semibold" style={{ color: 'var(--text-muted)' }}>Passed</div>
+                  <div className="text-3xl font-bold mono" style={{ color: 'var(--text-muted)' }}>+0</div>
                 </div>
               ) : revealData.tier === -1 ? (
                 <div className="text-center space-y-2">
-                  <div className="text-5xl mb-2">---</div>
-                  <div className="text-red-500 text-lg font-semibold">Time's up!</div>
+                  <div className="text-4xl mb-2 mono" style={{ color: 'var(--text-muted)' }}>---</div>
+                  <div className="mono text-lg font-semibold" style={{ color: 'var(--wrong)' }}>Time's up!</div>
                   {revealData.answer && (
-                    <div className="text-sm text-gray-500">
-                      "{revealData.answer}" - not on the sheet
+                    <div className="mono text-sm" style={{ color: 'var(--text-muted)' }}>
+                      "{revealData.answer}" -- not on the sheet
                     </div>
                   )}
-                  <div className="text-3xl font-bold text-gray-300 font-mono">+0</div>
+                  <div className="text-3xl font-bold mono" style={{ color: 'var(--text-muted)' }}>+0</div>
                 </div>
               ) : (
                 <div className="text-center space-y-2">
                   {/* Tier badge */}
                   <div
-                    className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold tracking-wider uppercase mb-1 ${TIER_BG_CLASSES[revealData.tier]}`}
-                    style={{ color: TIER_COLORS_HEX[revealData.tier] }}
+                    className="inline-block px-4 py-1.5 rounded-md mono text-sm font-bold tracking-wider uppercase mb-1"
+                    style={{
+                      background: `${TIER_COLORS_HEX[revealData.tier]}20`,
+                      color: TIER_COLORS_HEX[revealData.tier],
+                      border: `1px solid ${TIER_COLORS_HEX[revealData.tier]}40`,
+                    }}
                   >
                     {TIER_NAMES[revealData.tier]}
                   </div>
 
-                  {/* Points with scale animation */}
+                  {/* Points */}
                   <div
-                    className="text-5xl font-bold font-mono points-pop"
+                    className={`text-5xl font-bold mono points-pop tier-glow-${revealData.tier}`}
                     style={{ color: TIER_COLORS_HEX[revealData.tier] }}
                   >
                     +{revealData.points}
                   </div>
 
                   {/* Percentage */}
-                  <div className="text-sm text-gray-500 font-medium">
+                  <div className="mono text-sm" style={{ color: 'var(--text-muted)' }}>
                     {getAnswerPercentage(revealData.answer, prompt.answers)}% said this
                   </div>
 
-                  {/* Answer shown */}
-                  <div className="text-base font-medium mt-1" style={{ color: '#1a1a1a' }}>
+                  {/* Answer */}
+                  <div className="text-base font-medium mt-1" style={{ color: 'var(--text-primary)' }}>
                     "{revealData.answer}"
                   </div>
                 </div>
@@ -576,8 +580,14 @@ export default function GameScreen({ prompts, onFinish }) {
             </div>
 
             {/* Professor answers */}
-            <div className="rounded-2xl p-4 mb-4 bg-white/70 border border-[#e5e2da]">
-              <div className="text-[10px] font-bold tracking-[0.15em] uppercase mb-3" style={{ color: '#ec4899' }}>
+            <div
+              className="rounded-xl p-4 mb-4 border"
+              style={{
+                background: 'rgba(255, 68, 170, 0.05)',
+                borderColor: 'rgba(255, 68, 170, 0.15)',
+              }}
+            >
+              <div className="mono text-[10px] font-bold tracking-[0.15em] uppercase mb-3" style={{ color: '#ff44aa' }}>
                 Professor-tier answers
               </div>
               <div className="space-y-2">
@@ -585,110 +595,33 @@ export default function GameScreen({ prompts, onFinish }) {
                   getProfessorAnswers(prompt.answers).map((ans, i) => (
                     <div
                       key={i}
-                      className="text-sm font-medium px-3 py-2 rounded-xl bg-pink-50 text-pink-700 prof-answer-in"
-                      style={{ animationDelay: `${i * 0.1}s` }}
+                      className="mono text-sm font-medium px-3 py-2 rounded-lg prof-answer-in"
+                      style={{
+                        animationDelay: `${i * 0.1}s`,
+                        background: 'rgba(255, 68, 170, 0.1)',
+                        color: '#ff44aa',
+                        border: '1px solid rgba(255, 68, 170, 0.2)',
+                      }}
                     >
                       {ans}
                     </div>
                   ))
                 ) : (
-                  <div className="text-sm text-gray-400 italic">None for this prompt</div>
+                  <div className="mono text-sm italic" style={{ color: 'var(--text-muted)' }}>None for this prompt</div>
                 )}
               </div>
             </div>
 
-            {/* Next button */}
+            {/* Next / See Results button */}
             <button
               onClick={handleNext}
-              className="w-full py-4 rounded-2xl text-lg font-bold text-white transition-all duration-150 active:scale-[0.97] shadow-md"
-              style={{ backgroundColor: '#4571FF' }}
+              className="btn-game-primary w-full py-4 rounded-xl text-lg"
             >
-              {currentIndex < TOTAL_PROMPTS - 1 ? 'Next' : 'See Results'}
+              {currentIndex < TOTAL_PROMPTS - 1 ? 'DESCEND' : 'SEE RESULTS'}
             </button>
           </div>
         )}
       </div>
-
-      {/* ---- ANIMATIONS ---- */}
-      <style>{`
-        /* Prompt slide in */
-        .prompt-in {
-          animation: promptSlideIn 0.4s ease-out both;
-        }
-        .prompt-out {
-          animation: promptSlideOut 0.25s ease-in both;
-        }
-        @keyframes promptSlideIn {
-          from { opacity: 0; transform: translateX(30px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes promptSlideOut {
-          from { opacity: 1; transform: translateX(0); }
-          to { opacity: 0; transform: translateX(-30px); }
-        }
-
-        /* Shake */
-        .shake {
-          animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          15% { transform: translateX(-10px); }
-          30% { transform: translateX(8px); }
-          45% { transform: translateX(-6px); }
-          60% { transform: translateX(5px); }
-          75% { transform: translateX(-3px); }
-          90% { transform: translateX(2px); }
-        }
-
-        /* Timer pulse when low */
-        .timer-pulse {
-          animation: timerPulse 0.8s ease-in-out infinite;
-        }
-        @keyframes timerPulse {
-          0%, 100% { transform: scale(1); }
-          50% { transform: scale(1.06); }
-        }
-
-        /* Points pop-in */
-        .points-pop {
-          animation: pointsPop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.25) both;
-        }
-        @keyframes pointsPop {
-          0% { transform: scale(0.3); opacity: 0; }
-          60% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); opacity: 1; }
-        }
-
-        /* Professor answer stagger in */
-        .prof-answer-in {
-          animation: profIn 0.3s ease-out both;
-        }
-        @keyframes profIn {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Confetti particle */
-        .confetti-particle {
-          animation: confettiFall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
-        }
-        @keyframes confettiFall {
-          0% {
-            transform: translate(0, 0) rotate(0deg) scale(1);
-            opacity: 1;
-          }
-          100% {
-            transform: translate(var(--drift, 20px), -200px) rotate(720deg) scale(0);
-            opacity: 0;
-          }
-        }
-
-        /* Safe area padding for bottom buttons on notched phones */
-        .pb-safe {
-          padding-bottom: max(16px, env(safe-area-inset-bottom));
-        }
-      `}</style>
     </div>
   )
 }

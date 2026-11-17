@@ -30,10 +30,18 @@ function getGameNumber(dateStr) {
 }
 
 // ── Main App ─────────────────────────────────────────
+// Pick N random prompts from the full bank (for practice mode)
+function getRandomPrompts(allPrompts, count = 5) {
+  const shuffled = [...allPrompts].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, count)
+}
+
 export default function App() {
-  const [screen, setScreen] = useState('home') // 'home' | 'game' | 'result'
+  const [screen, setScreen] = useState('home') // 'home' | 'game' | 'result' | 'practice'
   const [allPrompts, setAllPrompts] = useState([])
   const [todayPrompts, setTodayPrompts] = useState([])
+  const [practicePrompts, setPracticePrompts] = useState([])
+  const [gameMode, setGameMode] = useState('daily') // 'daily' | 'practice'
   const [gameNumber, setGameNumber] = useState(1)
   const [results, setResults] = useState([])
 
@@ -55,6 +63,14 @@ export default function App() {
   }, [])
 
   function handlePlay() {
+    setGameMode('daily')
+    setResults([])
+    setScreen('game')
+  }
+
+  function handlePractice() {
+    setGameMode('practice')
+    setPracticePrompts(getRandomPrompts(allPrompts, 5))
     setResults([])
     setScreen('game')
   }
@@ -115,11 +131,12 @@ export default function App() {
           todayPrompts={todayPrompts}
           gameNumber={gameNumber}
           onPlay={handlePlay}
+          onPractice={handlePractice}
         />
       )}
       {screen === 'game' && (
         <GameScreen
-          prompts={todayPrompts}
+          prompts={gameMode === 'practice' ? practicePrompts : todayPrompts}
           onFinish={handleGameFinish}
           onBack={handleBackHome}
         />
