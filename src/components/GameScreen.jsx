@@ -48,9 +48,30 @@ function normalize(s) {
 function findMatch(typed, answers) {
   const n = normalize(typed)
   if (!n) return null
+
+  // Exact match first
   for (const [answer, tier] of Object.entries(answers)) {
     if (normalize(answer) === n) return { answer, tier }
   }
+
+  // Partial match: typed text is contained in an answer or answer is contained in typed
+  // e.g., "greenstick" matches "Greenstick fracture", "afib" matches "Atrial fibrillation"
+  for (const [answer, tier] of Object.entries(answers)) {
+    const na = normalize(answer)
+    if (na.includes(n) || n.includes(na)) return { answer, tier }
+  }
+
+  // Word match: any single word in the answer matches the typed text
+  // e.g., "colles" matches "Colles fracture"
+  if (n.length >= 4) { // only for inputs 4+ chars to avoid false positives
+    for (const [answer, tier] of Object.entries(answers)) {
+      const words = normalize(answer).split(' ')
+      if (words.some(w => w === n || (w.length >= 4 && w.startsWith(n)))) {
+        return { answer, tier }
+      }
+    }
+  }
+
   return null
 }
 

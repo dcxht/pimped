@@ -131,7 +131,7 @@ function FloatingSymbols() {
   )
 }
 
-export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
+export default function ResultScreen({ results, prompts, gameNumber, percentile = 50, onHome }) {
   const totalScore = results.reduce((sum, r) => sum + (r.points || 0), 0)
   const maxScore = 5 * 500
   const animatedScore = useAnimatedCounter(totalScore)
@@ -151,8 +151,9 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
 
   function handleShare() {
     const text = [
-      `Pimped #${gameNumber}`,
+      `Pimped #${gameNumber} 🩺`,
       `${totalScore}/${maxScore}`,
+      `Better than ${percentile}% of players`,
       emojiGrid,
       'pimped.io',
     ].join('\n')
@@ -237,6 +238,11 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
             {totalScore}m
           </p>
         </div>
+
+        {/* PERCENTILE */}
+        <p className="mono text-sm text-center" style={{ color: 'var(--accent)', opacity: 0.8 }}>
+          Better than {percentile}% of players
+        </p>
 
         {/* SHARE SECTION */}
         <div

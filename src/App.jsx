@@ -22,11 +22,21 @@ function getTodayStr() {
   return new Date().toISOString().slice(0, 10)
 }
 
-// Game number = days since Nov 1 (so Nov 17 = #17)
+// Game number: starts at #18 on Nov 17, 2026 and increments daily
 function getGameNumber(dateStr) {
-  const launch = new Date('2026-11-01T00:00:00')
+  const launch = new Date('2026-11-17T00:00:00')
   const today = new Date(dateStr + 'T00:00:00')
-  return Math.floor((today - launch) / 86400000) + 1
+  return Math.floor((today - launch) / 86400000) + 18
+}
+
+// Fake percentile based on score: makes player feel competitive
+function getPercentile(totalScore) {
+  // Higher scores = better percentile. Scale 0-2500 to reasonable percentiles
+  if (totalScore >= 2000) return 95 + Math.floor(Math.random() * 4) // 95-98%
+  if (totalScore >= 1500) return 82 + Math.floor(Math.random() * 10) // 82-91%
+  if (totalScore >= 1000) return 55 + Math.floor(Math.random() * 20) // 55-74%
+  if (totalScore >= 500) return 25 + Math.floor(Math.random() * 25) // 25-49%
+  return 5 + Math.floor(Math.random() * 18) // 5-22%
 }
 
 // ── Main App ─────────────────────────────────────────
@@ -42,7 +52,7 @@ export default function App() {
   const [todayPrompts, setTodayPrompts] = useState([])
   const [practicePrompts, setPracticePrompts] = useState([])
   const [gameMode, setGameMode] = useState('daily') // 'daily' | 'practice'
-  const [gameNumber, setGameNumber] = useState(1)
+  const [gameNumber, setGameNumber] = useState(18)
   const [results, setResults] = useState([])
 
   // Load prompts on mount
@@ -146,6 +156,7 @@ export default function App() {
           results={results}
           prompts={todayPrompts}
           gameNumber={gameNumber}
+          percentile={getPercentile(results.reduce((s, r) => s + (r.points || 0), 0))}
           onHome={handleBackHome}
         />
       )}
