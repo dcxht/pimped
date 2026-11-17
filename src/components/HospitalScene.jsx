@@ -499,10 +499,10 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         const py = p.y * h
         const r = p.size
 
+        const pColors = ['0, 220, 240', '0, 255, 100', '255, 200, 80', '255, 100, 100', '180, 140, 255']
         ctx.globalAlpha = p.opacity * (0.6 + 0.4 * Math.sin(state.time * 1.2 + p.phase))
         ctx.shadowColor = `rgba(${pColors[i % pColors.length]}, 0.6)`
         ctx.shadowBlur = 6
-        const pColors = ['0, 220, 240', '0, 255, 100', '255, 200, 80', '255, 100, 100', '180, 140, 255']
         ctx.fillStyle = `rgba(${pColors[i % pColors.length]}, 0.9)`
         ctx.beginPath()
         ctx.arc(px, py, r, 0, Math.PI * 2)
