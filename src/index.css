@@ -41,6 +41,7 @@ html { scrollbar-width: none; }
 
 .mono { font-family: 'IBM Plex Mono', monospace; }
 .pixel { font-family: 'Press Start 2P', monospace; }
+.vt323 { font-family: 'VT323', monospace; }
 
 /* ============================================
    HOSPITAL GRADIENT BACKGROUNDS
