@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
+import HospitalScene from './HospitalScene'
 
 const TIER_NAMES = {
   0: 'Pre-med',
@@ -10,12 +11,12 @@ const TIER_NAMES = {
 }
 
 const TIER_COLORS = {
-  0: { bg: '#dcfce7', text: '#15803d', accent: '#16a34a' },
-  1: { bg: '#fef9c3', text: '#a16207', accent: '#ca8a04' },
-  2: { bg: '#ffedd5', text: '#c2410c', accent: '#ea580c' },
-  3: { bg: '#ede9fe', text: '#7c3aed', accent: '#7c3aed' },
-  4: { bg: '#f3e8ff', text: '#6b21a8', accent: '#6b21a8' },
-  [-1]: { bg: '#f3f4f6', text: '#6b7280', accent: '#9ca3af' },
+  0: { color: '#00ff88', bg: 'rgba(0, 255, 136, 0.1)', border: 'rgba(0, 255, 136, 0.25)' },
+  1: { color: '#ffdd00', bg: 'rgba(255, 221, 0, 0.1)', border: 'rgba(255, 221, 0, 0.25)' },
+  2: { color: '#ff8800', bg: 'rgba(255, 136, 0, 0.1)', border: 'rgba(255, 136, 0, 0.25)' },
+  3: { color: '#c466ff', bg: 'rgba(196, 102, 255, 0.1)', border: 'rgba(196, 102, 255, 0.25)' },
+  4: { color: '#ff44aa', bg: 'rgba(255, 68, 170, 0.1)', border: 'rgba(255, 68, 170, 0.25)' },
+  [-1]: { color: '#4a6a85', bg: 'rgba(74, 106, 133, 0.1)', border: 'rgba(74, 106, 133, 0.25)' },
 }
 
 const TIER_EMOJI = {
@@ -28,6 +29,8 @@ const TIER_EMOJI = {
 }
 
 const TIER_POINTS = { 0: 100, 1: 200, 2: 300, 3: 400, 4: 500 }
+
+const MEDICAL_SYMBOLS = ['+', 'Rx', 'Dx', 'Hx', 'Tx', 'Sx', 'ECG', 'BP', 'HR', 'SpO2']
 
 function getOverallTier(score) {
   if (score >= 2000) return { label: 'Professor', tier: 4 }
@@ -95,6 +98,39 @@ function groupAnswersByTier(answers) {
   return groups
 }
 
+// Floating medical symbols
+function FloatingSymbols() {
+  const symbols = useMemo(() => {
+    return Array.from({ length: 14 }, (_, i) => ({
+      id: i,
+      symbol: MEDICAL_SYMBOLS[i % MEDICAL_SYMBOLS.length],
+      left: Math.random() * 100,
+      duration: 18 + Math.random() * 20,
+      delay: Math.random() * 18,
+      size: 11 + Math.random() * 10,
+    }))
+  }, [])
+
+  return (
+    <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+      {symbols.map((s) => (
+        <span
+          key={s.id}
+          className="float-symbol"
+          style={{
+            left: `${s.left}%`,
+            animationDuration: `${s.duration}s`,
+            animationDelay: `${s.delay}s`,
+            fontSize: `${s.size}px`,
+          }}
+        >
+          {s.symbol}
+        </span>
+      ))}
+    </div>
+  )
+}
+
 export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
   const totalScore = results.reduce((sum, r) => sum + (r.points || 0), 0)
   const maxScore = 5 * 500
@@ -115,7 +151,7 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
 
   function handleShare() {
     const text = [
-      `Pimped #${gameNumber} \u{1FA7A}`,
+      `Pimped #${gameNumber}`,
       `${totalScore}/${maxScore}`,
       emojiGrid,
       'pimped.io',
@@ -141,9 +177,11 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
   }
 
   return (
-    <div className="min-h-[100dvh] flex flex-col" style={{ background: '#F5F3EC' }}>
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      <HospitalScene depth={totalScore} />
+
       <div
-        className="flex-1 max-w-lg mx-auto w-full px-5 py-8 flex flex-col gap-5"
+        className="relative z-10 flex-1 max-w-lg mx-auto w-full px-5 py-8 flex flex-col gap-5"
         style={{
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'translateY(0)' : 'translateY(12px)',
@@ -153,24 +191,22 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
 
         {/* HEADER */}
         <header className="text-center pt-4 pb-2">
-          <p
-            className="text-xs font-bold tracking-widest uppercase mb-3"
-            style={{ color: '#a3a3a3' }}
-          >
+          <p className="hud-label mb-3">
             Pimped #{gameNumber}
           </p>
 
           {/* Animated score */}
           <p
-            className="font-black text-gray-900"
+            className="font-black mono glow-text"
             style={{
               fontSize: 'clamp(3rem, 10vw, 4.5rem)',
               lineHeight: 1,
+              color: 'var(--text-primary)',
             }}
           >
             {animatedScore}
           </p>
-          <p className="text-sm mt-1" style={{ color: '#737373' }}>
+          <p className="mono text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             out of {maxScore} possible
           </p>
         </header>
@@ -181,22 +217,34 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
           style={{ animation: mounted ? 'popIn 0.5s ease-out 0.4s both' : 'none' }}
         >
           <span
-            className="inline-flex items-center px-5 py-2.5 rounded-full text-sm font-black uppercase tracking-wider"
+            className="inline-flex items-center px-5 py-2.5 rounded-lg mono text-sm font-black uppercase tracking-wider"
             style={{
-              background: overallColors.accent,
-              color: '#fff',
-              boxShadow: `0 4px 14px ${overallColors.accent}50`,
+              background: overallColors.bg,
+              color: overallColors.color,
+              border: `1px solid ${overallColors.border}`,
+              boxShadow: `0 0 20px ${overallColors.bg}`,
+              textShadow: `0 0 10px ${overallColors.color}50`,
             }}
           >
             {overall.label}
           </span>
         </div>
 
+        {/* DEPTH REACHED */}
+        <div className="text-center">
+          <p className="hud-label mb-1">Maximum Depth</p>
+          <p className="mono text-2xl font-bold" style={{ color: 'var(--accent)', textShadow: '0 0 15px var(--accent-dim)' }}>
+            {totalScore}m
+          </p>
+        </div>
+
         {/* SHARE SECTION */}
         <div
-          className="bg-white rounded-2xl px-6 py-5 text-center"
+          className="rounded-xl px-6 py-5 text-center border"
           style={{
-            boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+            background: 'rgba(10, 22, 40, 0.7)',
+            borderColor: 'rgba(255, 255, 255, 0.06)',
+            backdropFilter: 'blur(12px)',
             animation: mounted ? 'slideUp 0.6s ease-out 0.5s both' : 'none',
           }}
         >
@@ -209,18 +257,16 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
 
           <button
             onClick={handleShare}
-            className="w-full py-3.5 rounded-xl text-white text-base font-bold tracking-wide
-                       active:scale-[0.97] transition-all"
-            style={{
-              background: copied
-                ? '#16a34a'
-                : 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
-              boxShadow: copied
-                ? '0 4px 14px rgba(22, 163, 106, 0.35)'
-                : '0 4px 14px rgba(124, 58, 237, 0.35)',
-            }}
+            className={`w-full py-3.5 rounded-xl mono text-base font-bold tracking-wide active:scale-[0.97] transition-all ${
+              copied ? '' : 'btn-game-primary'
+            }`}
+            style={copied ? {
+              background: 'rgba(0, 255, 136, 0.15)',
+              border: '1px solid rgba(0, 255, 136, 0.4)',
+              color: '#00ff88',
+            } : {}}
           >
-            {copied ? 'Copied!' : 'SHARE'}
+            {copied ? 'COPIED!' : 'SHARE'}
           </button>
         </div>
 
@@ -228,10 +274,7 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
         <div
           style={{ animation: mounted ? 'slideUp 0.6s ease-out 0.65s both' : 'none' }}
         >
-          <h2
-            className="text-xs font-bold tracking-widest uppercase px-1 mb-3"
-            style={{ color: '#a3a3a3' }}
-          >
+          <h2 className="hud-label px-1 mb-3">
             Your Answers
           </h2>
 
@@ -244,9 +287,10 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
               return (
                 <div
                   key={i}
-                  className="bg-white rounded-xl overflow-hidden transition-all"
+                  className="rounded-xl overflow-hidden border transition-all"
                   style={{
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                    background: 'rgba(10, 22, 40, 0.6)',
+                    borderColor: 'rgba(255, 255, 255, 0.06)',
                     animation: mounted ? `slideUp 0.4s ease-out ${0.7 + i * 0.08}s both` : 'none',
                   }}
                 >
@@ -256,25 +300,29 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
                     className="w-full px-5 py-4 flex items-center justify-between text-left"
                   >
                     <div className="min-w-0 flex-1 space-y-1">
-                      <p className="text-xs font-bold uppercase tracking-wide" style={{ color: '#a3a3a3' }}>
+                      <p className="hud-label">
                         {r.specialty || prompt?.specialty || `Prompt ${i + 1}`}
                       </p>
-                      <p className="text-sm text-gray-700 truncate">
+                      <p className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>
                         {r.prompt || prompt?.prompt || ''}
                       </p>
                       {r.answer ? (
-                        <p className="text-sm font-semibold text-gray-900">{r.answer}</p>
+                        <p className="mono text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{r.answer}</p>
                       ) : (
-                        <p className="text-sm italic" style={{ color: '#a3a3a3' }}>
+                        <p className="mono text-sm italic" style={{ color: 'var(--text-muted)' }}>
                           {r.passed ? 'Passed' : 'No answer'}
                         </p>
                       )}
                     </div>
                     <div className="text-right ml-4 flex-shrink-0 space-y-1">
-                      <p className="text-xl font-black text-gray-900">{r.points || 0}</p>
+                      <p className="text-xl font-black mono" style={{ color: 'var(--text-primary)' }}>{r.points || 0}</p>
                       <span
-                        className="inline-block text-xs font-bold px-2 py-0.5 rounded-full"
-                        style={{ background: tierColors.bg, color: tierColors.text }}
+                        className="inline-block mono text-xs font-bold px-2 py-0.5 rounded-md"
+                        style={{
+                          background: tierColors.bg,
+                          color: tierColors.color,
+                          border: `1px solid ${tierColors.border}`,
+                        }}
                       >
                         {TIER_NAMES[r.tier] ?? 'Missed'}
                       </span>
@@ -285,12 +333,9 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
                   {isExpanded && prompt?.answers && (
                     <div
                       className="px-5 pb-4 pt-0 border-t"
-                      style={{ borderColor: '#f3f4f6' }}
+                      style={{ borderColor: 'rgba(255,255,255,0.06)' }}
                     >
-                      <p
-                        className="text-xs font-bold uppercase tracking-wide mb-3 mt-3"
-                        style={{ color: '#a3a3a3' }}
-                      >
+                      <p className="hud-label mb-3 mt-3">
                         All Accepted Answers
                       </p>
                       {Object.entries(groupAnswersByTier(prompt.answers))
@@ -299,18 +344,19 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
                           const tc = TIER_COLORS[tier] ?? TIER_COLORS[-1]
                           return (
                             <div key={tier} className="mb-2.5 last:mb-0">
-                              <p className="text-xs font-bold mb-1" style={{ color: tc.text }}>
+                              <p className="mono text-xs font-bold mb-1" style={{ color: tc.color }}>
                                 {TIER_NAMES[tier]} ({TIER_POINTS[tier]} pts)
                               </p>
                               <div className="flex flex-wrap gap-1.5">
                                 {answers.map((a, j) => (
                                   <span
                                     key={j}
-                                    className="text-xs px-2 py-1 rounded-md font-medium"
+                                    className="mono text-xs px-2 py-1 rounded-md font-medium"
                                     style={{
                                       background: tc.bg,
-                                      color: tc.text,
-                                      opacity: r.answer && a.toLowerCase() === r.answer.toLowerCase() ? 1 : 0.7,
+                                      color: tc.color,
+                                      border: `1px solid ${tc.border}`,
+                                      opacity: r.answer && a.toLowerCase() === r.answer.toLowerCase() ? 1 : 0.6,
                                       fontWeight: r.answer && a.toLowerCase() === r.answer.toLowerCase() ? 800 : 500,
                                     }}
                                   >
@@ -335,45 +381,22 @@ export default function ResultScreen({ results, prompts, gameNumber, onHome }) {
           style={{ animation: mounted ? 'slideUp 0.6s ease-out 1s both' : 'none' }}
         >
           <div className="space-y-1">
-            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#a3a3a3' }}>
+            <p className="hud-label">
               Next round in
             </p>
-            <p className="mono text-2xl font-bold text-gray-900">{countdown}</p>
+            <p className="mono text-2xl font-bold" style={{ color: 'var(--accent)', textShadow: '0 0 10px var(--accent-dim)' }}>
+              {countdown}
+            </p>
           </div>
 
           <button
             onClick={onHome}
-            className="w-full py-3.5 rounded-xl text-base font-bold tracking-wide
-                       border-2 transition-all active:scale-[0.97]"
-            style={{ borderColor: '#d4d4d4', color: '#525252' }}
+            className="btn-game w-full py-3.5 rounded-xl text-base"
           >
-            Back to Home
+            BACK TO LOBBY
           </button>
         </div>
       </div>
-
-      <style>{`
-        @keyframes slideUp {
-          from {
-            opacity: 0;
-            transform: translateY(16px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        @keyframes popIn {
-          from {
-            opacity: 0;
-            transform: scale(0.7);
-          }
-          to {
-            opacity: 1;
-            transform: scale(1);
-          }
-        }
-      `}</style>
     </div>
   )
 }

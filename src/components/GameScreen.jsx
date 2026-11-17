@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import HospitalScene from './HospitalScene'
 
 const TIMER_DURATION = 25000
 const TOTAL_PROMPTS = 5
@@ -354,16 +355,11 @@ export default function GameScreen({ prompts, onFinish }) {
 
   const timerProgress = timeLeft / TIMER_DURATION
   const isTimerLow = Math.ceil(timeLeft / 1000) <= 5
-  const depthBg = getDepthBackground(totalScore)
-
   return (
-    <div
-      className="min-h-[100dvh] flex flex-col relative overflow-hidden bg-depth-transition"
-      style={{ background: depthBg }}
-    >
+    <div className="relative min-h-[100dvh] overflow-hidden">
+      <HospitalScene depth={totalScore} />
       <Confetti active={showConfetti} />
-      <FloatingSymbols />
-      <DepthMarkers score={totalScore} />
+      <div className="relative z-10 min-h-[100dvh] flex flex-col">
 
       {/* Wrong answer red flash on edges */}
       {wrongFlash && (
@@ -621,6 +617,7 @@ export default function GameScreen({ prompts, onFinish }) {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   )
