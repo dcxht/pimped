@@ -1,7 +1,7 @@
 // Hospital Scene - 5 discrete full-viewport scenes that crossfade based on depth
 // Scene 1: Exterior (0-499) | Scene 2: Lobby (500-999) | Scene 3: Ward (1000-1499)
 // Scene 4: ICU (1500-1999) | Scene 5: OR (2000-2500)
-// Loads pixel art sprite sheets and draws them on canvas
+// Loads pixel art sprite sheets and draws them on canvas with crispy pixelated scaling
 
 import { useRef, useEffect } from 'react'
 
@@ -18,6 +18,26 @@ const SPRITES = {
   misc: { src: '/sprites/TileSheet-Misc.png', frameW: 32, frameH: 32 },
   labs: { src: '/sprites/TileSheet-Labs.png', frameW: 32, frameH: 32 },
   office: { src: '/sprites/TileSheet-ConsultationOffice.png', frameW: 32, frameH: 32 },
+}
+
+// -- Sprite region definitions for TileSheet-BedRooms.png --
+const BED_REGIONS = {
+  bed1:          { sx: 0,   sy: 0,   sw: 64,  sh: 48 },   // purple/pink bed top-left
+  bed2:          { sx: 64,  sy: 0,   sw: 64,  sh: 48 },   // blue bed
+  bed3:          { sx: 0,   sy: 48,  sw: 64,  sh: 48 },   // metal frame bed
+  bedDark:       { sx: 0,   sy: 128, sw: 64,  sh: 48 },   // dark navy bed
+  bedMedical:    { sx: 64,  sy: 128, sw: 64,  sh: 48 },   // medical bed with equipment
+  iv1:           { sx: 192, sy: 0,   sw: 16,  sh: 64 },   // IV drip stand
+  iv2:           { sx: 208, sy: 0,   sw: 16,  sh: 64 },   // IV drip stand variant
+  lamp1:         { sx: 160, sy: 0,   sw: 32,  sh: 48 },   // overhead surgical lamp
+  lamp2:         { sx: 192, sy: 48,  sw: 32,  sh: 48 },   // lamp variant
+  monitor1:      { sx: 128, sy: 128, sw: 32,  sh: 32 },   // monitor/screen
+  wheelchair:    { sx: 0,   sy: 192, sw: 32,  sh: 32 },   // wheelchair
+  curtainPurple: { sx: 256, sy: 128, sw: 64,  sh: 96 },   // purple curtain
+  curtainGreen:  { sx: 384, sy: 48,  sw: 64,  sh: 96 },   // green curtain
+  curtainBlue:   { sx: 448, sy: 128, sw: 64,  sh: 96 },   // blue curtain
+  curtainTeal:   { sx: 320, sy: 48,  sw: 64,  sh: 96 },   // teal/mint curtain
+  chairs:        { sx: 0,   sy: 224, sw: 96,  sh: 32 },   // row of chairs
 }
 
 // -- EKG waveform data --
@@ -170,6 +190,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         swayPhase: Math.random() * Math.PI * 2,
         swaySpeed: rand(0.3, 1.0),
         height: rand(0.5, 0.8),
+        colorIdx: i % 3, // 0=purple, 1=green, 2=blue
       }))
 
       const ventilators = Array.from({ length: 3 }, (_, i) => ({
@@ -235,7 +256,10 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
 
     // == SCENE BOUNDARIES ==
     const SCENE_SIZE = 500
-    const CROSSFADE_RANGE = 40
+    const CROSSFADE_RANGE = 150 // wider for smoother mobile transitions
+
+    // Smooth easing function
+    function ease(t) { return t * t * (3 - 2 * t) }
 
     function getSceneOpacities(d) {
       const idx = Math.min(Math.floor(d / SCENE_SIZE), 4)
@@ -243,11 +267,11 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       const opacities = [0, 0, 0, 0, 0]
 
       if (posInScene < CROSSFADE_RANGE && idx > 0) {
-        const blend = posInScene / CROSSFADE_RANGE
+        const blend = ease(posInScene / CROSSFADE_RANGE)
         opacities[idx - 1] = 1 - blend
         opacities[idx] = blend
       } else if (posInScene > SCENE_SIZE - CROSSFADE_RANGE && idx < 4) {
-        const blend = (posInScene - (SCENE_SIZE - CROSSFADE_RANGE)) / CROSSFADE_RANGE
+        const blend = ease((posInScene - (SCENE_SIZE - CROSSFADE_RANGE)) / CROSSFADE_RANGE)
         opacities[idx] = 1 - blend
         opacities[idx + 1] = blend
       } else {
@@ -266,12 +290,24 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.restore()
     }
 
+    // == SPRITE REGION DRAW HELPER (for BedRooms sheet regions) ==
+    function drawBedRegion(region, dx, dy, dw, dh, sprAlpha) {
+      const sprite = S.sprites.bedrooms
+      if (!sprite.loaded) return
+      ctx.save()
+      ctx.globalAlpha = sprAlpha
+      ctx.imageSmoothingEnabled = false
+      ctx.drawImage(sprite.img, region.sx, region.sy, region.sw, region.sh, dx, dy, dw, dh)
+      ctx.restore()
+    }
+
     // ================================================================
     // SCENE 1: HOSPITAL EXTERIOR (cool blues / purples)
     // ================================================================
     function drawExterior(w, h, t, alpha) {
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.imageSmoothingEnabled = false
 
       // Night sky gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, h)
@@ -551,6 +587,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     function drawLobby(w, h, t, alpha) {
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.imageSmoothingEnabled = false
 
       // Warm background
       const bg = ctx.createLinearGradient(0, 0, 0, h)
@@ -626,16 +663,13 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.fillStyle = 'rgba(200, 180, 140, 0.08)'
       ctx.fillRect(deskLeft, deskY - 3, deskW, 1)
 
-      // Computer monitor
+      // Computer monitor on desk - SPRITE VERSION
       const monX = deskLeft + deskW * 0.6
       const monY = deskY - h * 0.06
-      ctx.fillStyle = 'rgba(20, 25, 30, 0.8)'
-      ctx.fillRect(monX, monY, 22, 18)
-      ctx.fillStyle = `rgba(60, 180, 200, ${0.2 + 0.05 * Math.sin(t * 0.8)})`
+      drawBedRegion(BED_REGIONS.monitor1, monX - 4, monY - 4, 32, 28, 0.35)
+      // Screen glow overlay
+      ctx.fillStyle = `rgba(60, 180, 200, ${0.15 + 0.05 * Math.sin(t * 0.8)})`
       ctx.fillRect(monX + 2, monY + 2, 18, 14)
-      ctx.fillStyle = 'rgba(60, 60, 60, 0.5)'
-      ctx.fillRect(monX + 8, monY + 18, 6, 5)
-      ctx.fillRect(monX + 4, deskY - 4, 14, 2)
 
       // Desk lamp
       ctx.strokeStyle = 'rgba(120, 100, 70, 0.4)'
@@ -656,55 +690,76 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.arc(deskLeft + deskW * 0.15, deskY - h * 0.02, h * 0.06, 0, Math.PI * 2)
       ctx.fill()
 
-      // Waiting chairs (left side)
+      // Waiting chairs - SPRITE VERSION (pixel art chairs from BedRooms sheet)
       const chairY = h * 0.68
-      for (let i = 0; i < 5; i++) {
-        const cx = w * 0.05 + i * w * 0.045
-        ctx.fillStyle = 'rgba(70, 90, 120, 0.4)'
-        ctx.fillRect(cx, chairY, 14, 6)
-        ctx.fillStyle = 'rgba(60, 80, 110, 0.35)'
-        ctx.fillRect(cx, chairY - 14, 14, 14)
-        ctx.fillStyle = 'rgba(90, 90, 90, 0.3)'
-        ctx.fillRect(cx + 1, chairY + 6, 2, 8)
-        ctx.fillRect(cx + 11, chairY + 6, 2, 8)
-      }
-      // Right side chairs
-      for (let i = 0; i < 4; i++) {
-        const cx = w * 0.78 + i * w * 0.045
-        ctx.fillStyle = 'rgba(70, 90, 120, 0.4)'
-        ctx.fillRect(cx, chairY + 4, 14, 6)
-        ctx.fillStyle = 'rgba(60, 80, 110, 0.35)'
-        ctx.fillRect(cx, chairY + 4 - 14, 14, 14)
-        ctx.fillStyle = 'rgba(90, 90, 90, 0.3)'
-        ctx.fillRect(cx + 1, chairY + 10, 2, 8)
-        ctx.fillRect(cx + 11, chairY + 10, 2, 8)
+      const bedSprite = S.sprites.bedrooms
+      if (bedSprite.loaded) {
+        // Left side chairs
+        for (let i = 0; i < 5; i++) {
+          const cx = w * 0.04 + i * 44
+          drawBedRegion(BED_REGIONS.chairs, cx, chairY - 12, 36, 32, 0.3)
+        }
+        // Right side chairs
+        for (let i = 0; i < 4; i++) {
+          const cx = w * 0.77 + i * 44
+          drawBedRegion(BED_REGIONS.chairs, cx, chairY - 8, 36, 32, 0.25)
+        }
+      } else {
+        // Fallback primitive chairs
+        for (let i = 0; i < 5; i++) {
+          const cx = w * 0.05 + i * w * 0.045
+          ctx.fillStyle = 'rgba(70, 90, 120, 0.4)'
+          ctx.fillRect(cx, chairY, 14, 6)
+          ctx.fillStyle = 'rgba(60, 80, 110, 0.35)'
+          ctx.fillRect(cx, chairY - 14, 14, 14)
+          ctx.fillStyle = 'rgba(90, 90, 90, 0.3)'
+          ctx.fillRect(cx + 1, chairY + 6, 2, 8)
+          ctx.fillRect(cx + 11, chairY + 6, 2, 8)
+        }
+        for (let i = 0; i < 4; i++) {
+          const cx = w * 0.78 + i * w * 0.045
+          ctx.fillStyle = 'rgba(70, 90, 120, 0.4)'
+          ctx.fillRect(cx, chairY + 4, 14, 6)
+          ctx.fillStyle = 'rgba(60, 80, 110, 0.35)'
+          ctx.fillRect(cx, chairY + 4 - 14, 14, 14)
+          ctx.fillStyle = 'rgba(90, 90, 90, 0.3)'
+          ctx.fillRect(cx + 1, chairY + 10, 2, 8)
+          ctx.fillRect(cx + 11, chairY + 10, 2, 8)
+        }
       }
 
-      // Potted plants
-      function drawPlant(px, py, size) {
-        ctx.fillStyle = 'rgba(120, 70, 40, 0.5)'
-        ctx.beginPath()
-        ctx.moveTo(px - 7 * size, py)
-        ctx.lineTo(px + 7 * size, py)
-        ctx.lineTo(px + 5 * size, py + 14 * size)
-        ctx.lineTo(px - 5 * size, py + 14 * size)
-        ctx.closePath()
-        ctx.fill()
-        ctx.fillStyle = 'rgba(40, 100, 50, 0.45)'
-        ctx.beginPath()
-        ctx.arc(px, py - 8 * size, 10 * size, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.fillStyle = 'rgba(50, 120, 60, 0.35)'
-        ctx.beginPath()
-        ctx.arc(px - 6 * size, py - 12 * size, 7 * size, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.beginPath()
-        ctx.arc(px + 6 * size, py - 10 * size, 7 * size, 0, Math.PI * 2)
-        ctx.fill()
+      // Potted plants - SPRITE VERSION (plants from inside.png bottom-left)
+      const insSprite = S.sprites.inside
+      if (insSprite.loaded) {
+        drawSprite(insSprite, 0, 192, 32, 32, w * 0.02, h * 0.56, 44, 44, 0.35)
+        drawSprite(insSprite, 32, 192, 32, 32, w * 0.94, h * 0.58, 40, 40, 0.3)
+        drawSprite(insSprite, 64, 192, 32, 32, w * 0.26, h * 0.66, 32, 32, 0.25)
+      } else {
+        function drawPlant(px, py, size) {
+          ctx.fillStyle = 'rgba(120, 70, 40, 0.5)'
+          ctx.beginPath()
+          ctx.moveTo(px - 7 * size, py)
+          ctx.lineTo(px + 7 * size, py)
+          ctx.lineTo(px + 5 * size, py + 14 * size)
+          ctx.lineTo(px - 5 * size, py + 14 * size)
+          ctx.closePath()
+          ctx.fill()
+          ctx.fillStyle = 'rgba(40, 100, 50, 0.45)'
+          ctx.beginPath()
+          ctx.arc(px, py - 8 * size, 10 * size, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.fillStyle = 'rgba(50, 120, 60, 0.35)'
+          ctx.beginPath()
+          ctx.arc(px - 6 * size, py - 12 * size, 7 * size, 0, Math.PI * 2)
+          ctx.fill()
+          ctx.beginPath()
+          ctx.arc(px + 6 * size, py - 10 * size, 7 * size, 0, Math.PI * 2)
+          ctx.fill()
+        }
+        drawPlant(w * 0.04, h * 0.60, 1.2)
+        drawPlant(w * 0.96, h * 0.62, 1.0)
+        drawPlant(w * 0.28, h * 0.70, 0.8)
       }
-      drawPlant(w * 0.04, h * 0.60, 1.2)
-      drawPlant(w * 0.96, h * 0.62, 1.0)
-      drawPlant(w * 0.28, h * 0.70, 0.8)
 
       // Vending machine
       const vmX = w * 0.90
@@ -790,6 +845,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     function drawWard(w, h, t, alpha) {
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.imageSmoothingEnabled = false
 
       // Teal corridor background
       const bg = ctx.createLinearGradient(0, 0, 0, h)
@@ -953,16 +1009,14 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         drawSprite(doorSprite, 0, 0, 32, 64, w * 0.92, h * 0.32, 48, 96, 0.12)
       }
 
-      // EKG monitor on left wall
+      // EKG monitor on left wall - SPRITE + animated EKG overlay
       const ekgX = w * 0.05
       const ekgMonY = h * 0.22
       const ekgW = w * 0.12
       const ekgH = h * 0.08
-      ctx.fillStyle = 'rgba(8, 20, 25, 0.8)'
-      ctx.fillRect(ekgX, ekgMonY, ekgW, ekgH)
-      ctx.strokeStyle = 'rgba(0, 200, 170, 0.2)'
-      ctx.lineWidth = 1
-      ctx.strokeRect(ekgX, ekgMonY, ekgW, ekgH)
+      // Draw sprite monitor background
+      drawBedRegion(BED_REGIONS.monitor1, ekgX, ekgMonY, ekgW, ekgH, 0.35)
+      // Animated EKG trace on top
       ctx.strokeStyle = 'rgba(0, 255, 140, 0.8)'
       ctx.lineWidth = 1.5
       ctx.beginPath()
@@ -979,16 +1033,12 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.arc(ekgX + ekgW - 5, ekgMonY + 5, 2, 0, Math.PI * 2)
       ctx.fill()
 
-      // Second monitor (right wall)
+      // Second monitor (right wall) - SPRITE + animated EKG
       const ekgX2r = w * 0.84
       const ekgY2r = h * 0.25
       const ekgWr = w * 0.1
       const ekgHr = h * 0.06
-      ctx.fillStyle = 'rgba(8, 20, 25, 0.7)'
-      ctx.fillRect(ekgX2r, ekgY2r, ekgWr, ekgHr)
-      ctx.strokeStyle = 'rgba(0, 200, 170, 0.15)'
-      ctx.lineWidth = 0.8
-      ctx.strokeRect(ekgX2r, ekgY2r, ekgWr, ekgHr)
+      drawBedRegion(BED_REGIONS.monitor1, ekgX2r, ekgY2r, ekgWr, ekgHr, 0.28)
       ctx.strokeStyle = 'rgba(0, 255, 140, 0.6)'
       ctx.lineWidth = 1
       ctx.beginPath()
@@ -1032,42 +1082,16 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         }
       }
 
-      // Hospital bed sprite through open doors
-      const bedSprite = S.sprites.bedrooms
-      if (bedSprite.loaded) {
-        drawSprite(bedSprite, 0, 0, 64, 48, w * 0.03, h * 0.42, 56, 42, 0.12)
-        drawSprite(bedSprite, 0, 0, 64, 48, w * 0.88, h * 0.46, 48, 36, 0.10)
-      }
+      // Hospital bed sprites through open doors
+      drawBedRegion(BED_REGIONS.bed1, w * 0.02, h * 0.40, 80, 56, 0.15)
+      drawBedRegion(BED_REGIONS.bed2, w * 0.87, h * 0.44, 72, 50, 0.12)
 
-      // IV stands
-      function drawIV(ix, iy, sc, ivAlpha) {
-        ctx.strokeStyle = `rgba(0, 180, 170, ${ivAlpha})`
-        ctx.lineWidth = 1
-        ctx.beginPath()
-        ctx.moveTo(ix, iy)
-        ctx.lineTo(ix, iy - 40 * sc)
-        ctx.stroke()
-        ctx.beginPath()
-        ctx.moveTo(ix - 5 * sc, iy - 40 * sc)
-        ctx.lineTo(ix + 5 * sc, iy - 40 * sc)
-        ctx.stroke()
-        ctx.fillStyle = `rgba(100, 200, 200, ${ivAlpha * 0.4})`
-        ctx.fillRect(ix + 2 * sc, iy - 38 * sc, 6 * sc, 10 * sc)
-        ctx.strokeStyle = `rgba(0, 180, 170, ${ivAlpha * 0.3})`
-        ctx.beginPath()
-        ctx.moveTo(ix + 5 * sc, iy - 28 * sc)
-        ctx.lineTo(ix + 5 * sc, iy - 14 * sc)
-        ctx.stroke()
-        ctx.strokeStyle = `rgba(0, 180, 170, ${ivAlpha * 0.4})`
-        ctx.beginPath()
-        ctx.moveTo(ix, iy)
-        ctx.lineTo(ix - 6 * sc, iy + 3 * sc)
-        ctx.moveTo(ix, iy)
-        ctx.lineTo(ix + 6 * sc, iy + 3 * sc)
-        ctx.stroke()
-      }
-      drawIV(w * 0.08, h * 0.60, 0.9, 0.2)
-      drawIV(w * 0.92, h * 0.55, 0.8, 0.15)
+      // IV stand sprites
+      drawBedRegion(BED_REGIONS.iv1, w * 0.07, h * 0.42, 24, 80, 0.2)
+      drawBedRegion(BED_REGIONS.iv2, w * 0.91, h * 0.38, 22, 76, 0.16)
+
+      // Wheelchair sprite
+      drawBedRegion(BED_REGIONS.wheelchair, w * 0.14, h * 0.78, 44, 44, 0.18)
 
       // Particles (teal)
       for (const p of S.particles) {
@@ -1102,6 +1126,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     function drawICU(w, h, t, alpha) {
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.imageSmoothingEnabled = false
 
       // Very dark background
       const bg = ctx.createLinearGradient(0, 0, 0, h)
@@ -1119,7 +1144,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.fillStyle = redAmbient
       ctx.fillRect(0, 0, w, h)
 
-      // Multiple EKG monitors
+      // Multiple EKG monitors - SPRITE backgrounds + animated traces
       for (const mon of S.icuMonitors) {
         const mx = mon.x * w
         const my = mon.y * h
@@ -1127,15 +1152,14 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         const mh = mon.h * h
         const [cr, cg, cb] = mon.traceColor
 
-        ctx.fillStyle = 'rgba(8, 14, 22, 0.9)'
-        ctx.fillRect(mx, my, mw, mh)
-        ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.15)`
-        ctx.lineWidth = 1
-        ctx.strokeRect(mx, my, mw, mh)
+        // Sprite monitor background
+        drawBedRegion(BED_REGIONS.monitor1, mx, my, mw, mh, 0.4)
 
+        // Screen tint overlay
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.03)`
         ctx.fillRect(mx + 2, my + 2, mw - 4, mh - 4)
 
+        // Animated EKG trace
         ctx.strokeStyle = `rgba(${cr}, ${cg}, ${cb}, 0.8)`
         ctx.lineWidth = 1.2
         ctx.beginPath()
@@ -1148,6 +1172,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         }
         ctx.stroke()
 
+        // Monitor screen glow
         const mGlow = ctx.createRadialGradient(mx + mw / 2, my + mh / 2, 0, mx + mw / 2, my + mh / 2, mw)
         mGlow.addColorStop(0, `rgba(${cr}, ${cg}, ${cb}, 0.04)`)
         mGlow.addColorStop(1, `rgba(${cr}, ${cg}, ${cb}, 0)`)
@@ -1156,11 +1181,13 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         ctx.arc(mx + mw / 2, my + mh / 2, mw, 0, Math.PI * 2)
         ctx.fill()
 
+        // Status dot
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, ${0.5 + 0.5 * Math.sin(t * 2 + mon.timeOffset)})`
         ctx.beginPath()
         ctx.arc(mx + mw - 5, my + 5, 2, 0, Math.PI * 2)
         ctx.fill()
 
+        // BPM text
         ctx.fillStyle = `rgba(${cr}, ${cg}, ${cb}, 0.4)`
         ctx.font = `${Math.max(8, mh * 0.2)}px monospace`
         const bpm = 60 + Math.floor(Math.sin(t * 0.3 + mon.timeOffset) * 15)
@@ -1223,30 +1250,49 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         ctx.stroke()
       }
 
-      // Curtain dividers (swaying)
+      // Curtain dividers - SPRITE VERSION
+      const curtainRegions = [BED_REGIONS.curtainPurple, BED_REGIONS.curtainGreen, BED_REGIONS.curtainBlue]
       for (const curtain of S.icuCurtains) {
         const cx = curtain.x * w
         const sway = Math.sin(t * curtain.swaySpeed + curtain.swayPhase) * 4
         const curtainTop = h * 0.15
         const curtainBottom = curtainTop + curtain.height * h
+        const curtainH = curtainBottom - curtainTop
+        const curtainW = 72
 
-        ctx.fillStyle = 'rgba(60, 80, 100, 0.12)'
-        ctx.fillRect(cx - 12, curtainTop - 2, 24, 3)
-
-        ctx.strokeStyle = 'rgba(50, 70, 100, 0.12)'
-        ctx.lineWidth = 1.5
-        for (let fold = -2; fold <= 2; fold++) {
-          ctx.beginPath()
-          for (let y = curtainTop; y < curtainBottom; y += 2) {
-            const frac = (y - curtainTop) / (curtainBottom - curtainTop)
-            const offset = sway * frac * Math.sin(frac * Math.PI) + fold * 3
-            if (y <= curtainTop + 1) ctx.moveTo(cx + offset, y)
-            else ctx.lineTo(cx + offset, y)
+        const region = curtainRegions[curtain.colorIdx % curtainRegions.length]
+        const bedSprite = S.sprites.bedrooms
+        if (bedSprite.loaded) {
+          ctx.save()
+          ctx.globalAlpha = 0.22
+          ctx.imageSmoothingEnabled = false
+          ctx.translate(cx - curtainW / 2 + sway * 0.5, curtainTop)
+          ctx.drawImage(bedSprite.img,
+            region.sx, region.sy, region.sw, region.sh,
+            0, 0, curtainW, curtainH)
+          ctx.restore()
+          // Curtain rod
+          ctx.fillStyle = 'rgba(60, 80, 100, 0.12)'
+          ctx.fillRect(cx - 14, curtainTop - 2, 28, 3)
+        } else {
+          // Fallback: primitive curtain lines
+          ctx.fillStyle = 'rgba(60, 80, 100, 0.12)'
+          ctx.fillRect(cx - 12, curtainTop - 2, 24, 3)
+          ctx.strokeStyle = 'rgba(50, 70, 100, 0.12)'
+          ctx.lineWidth = 1.5
+          for (let fold = -2; fold <= 2; fold++) {
+            ctx.beginPath()
+            for (let y = curtainTop; y < curtainBottom; y += 2) {
+              const frac = (y - curtainTop) / (curtainBottom - curtainTop)
+              const offset = sway * frac * Math.sin(frac * Math.PI) + fold * 3
+              if (y <= curtainTop + 1) ctx.moveTo(cx + offset, y)
+              else ctx.lineTo(cx + offset, y)
+            }
+            ctx.stroke()
           }
-          ctx.stroke()
+          ctx.fillStyle = 'rgba(40, 55, 80, 0.06)'
+          ctx.fillRect(cx - 8 + sway * 0.3, curtainTop, 16, curtainBottom - curtainTop)
         }
-        ctx.fillStyle = 'rgba(40, 55, 80, 0.06)'
-        ctx.fillRect(cx - 8 + sway * 0.3, curtainTop, 16, curtainBottom - curtainTop)
       }
 
       // Medical items sprites
@@ -1263,21 +1309,14 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         }
       }
 
-      // ICU beds
-      function drawBed(bedX, bedY, bw, bh, bedAlpha) {
-        ctx.strokeStyle = `rgba(80, 120, 150, ${bedAlpha})`
-        ctx.lineWidth = 0.8
-        ctx.strokeRect(bedX, bedY, bw, bh)
-        ctx.fillStyle = `rgba(40, 60, 90, ${bedAlpha * 0.3})`
-        ctx.fillRect(bedX, bedY, bw, bh)
-        ctx.fillStyle = `rgba(60, 80, 110, ${bedAlpha * 0.5})`
-        ctx.fillRect(bedX, bedY - bh * 0.3, bw * 0.1, bh * 1.3)
-        ctx.fillStyle = `rgba(100, 130, 160, ${bedAlpha * 0.1})`
-        ctx.fillRect(bedX + bw * 0.15, bedY + 1, bw * 0.7, bh * 0.3)
-      }
-      drawBed(w * 0.15, h * 0.65, 50, 16, 0.2)
-      drawBed(w * 0.55, h * 0.68, 48, 15, 0.18)
-      drawBed(w * 0.35, h * 0.82, 45, 14, 0.15)
+      // ICU beds - SPRITE VERSION
+      drawBedRegion(BED_REGIONS.bedMedical, w * 0.13, h * 0.60, 100, 70, 0.2)
+      drawBedRegion(BED_REGIONS.bedDark,    w * 0.53, h * 0.63, 96,  66, 0.18)
+      drawBedRegion(BED_REGIONS.bed3,       w * 0.33, h * 0.78, 88,  60, 0.15)
+
+      // IV stands in ICU
+      drawBedRegion(BED_REGIONS.iv1, w * 0.24, h * 0.52, 20, 72, 0.18)
+      drawBedRegion(BED_REGIONS.iv2, w * 0.64, h * 0.56, 18, 68, 0.15)
 
       // Scanlines
       ctx.fillStyle = 'rgba(255, 50, 50, 0.004)'
@@ -1301,6 +1340,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     function drawOR(w, h, t, alpha) {
       ctx.save()
       ctx.globalAlpha = alpha
+      ctx.imageSmoothingEnabled = false
 
       // Near-black background
       ctx.fillStyle = '#030508'
@@ -1335,17 +1375,9 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.arc(spotX, h * 0.62, w * 0.18, 0, Math.PI * 2)
       ctx.fill()
 
-      // Lamp fixture
-      ctx.fillStyle = 'rgba(160, 170, 185, 0.25)'
-      ctx.beginPath()
-      ctx.arc(spotX, spotTop, 24, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.strokeStyle = 'rgba(200, 210, 225, 0.15)'
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      ctx.arc(spotX, spotTop, 24, 0, Math.PI * 2)
-      ctx.stroke()
-      // Inner LED ring
+      // Lamp fixture - SPRITE VERSION
+      drawBedRegion(BED_REGIONS.lamp1, spotX - 32, spotTop - 28, 64, 56, 0.4)
+      // Inner LED ring on top
       for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 6) {
         const lx = spotX + Math.cos(angle) * 15
         const ly = spotTop + Math.sin(angle) * 15
@@ -1362,7 +1394,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.lineTo(spotX + 15, 0)
       ctx.stroke()
 
-      // Secondary lamp
+      // Secondary lamp - SPRITE VERSION
       const spot2X = w * 0.35
       const spot2Y = h * 0.12
       const spot2Grad = ctx.createLinearGradient(spot2X, spot2Y, spot2X, h * 0.65)
@@ -1377,10 +1409,14 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.lineTo(spot2X - w * 0.08, h * 0.65)
       ctx.closePath()
       ctx.fill()
-      ctx.fillStyle = 'rgba(140, 150, 165, 0.18)'
+      drawBedRegion(BED_REGIONS.lamp2, spot2X - 24, spot2Y - 20, 48, 40, 0.3)
+      // Arm
+      ctx.strokeStyle = 'rgba(120, 130, 145, 0.12)'
+      ctx.lineWidth = 2
       ctx.beginPath()
-      ctx.arc(spot2X, spot2Y, 16, 0, Math.PI * 2)
-      ctx.fill()
+      ctx.moveTo(spot2X, spot2Y - 16)
+      ctx.lineTo(spot2X - 10, 0)
+      ctx.stroke()
 
       // Operating table
       const tableX = w * 0.5
@@ -1465,16 +1501,13 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.quadraticCurveTo(amX + 15, amY + 70, amX + 40, amY + 70)
       ctx.stroke()
 
-      // Side monitor
+      // Side monitor - SPRITE + animated EKG
       const smX = w * 0.72
       const smY = h * 0.35
       const smW = w * 0.08
       const smH = h * 0.06
-      ctx.fillStyle = 'rgba(8, 14, 22, 0.8)'
-      ctx.fillRect(smX, smY, smW, smH)
-      ctx.strokeStyle = 'rgba(0, 255, 130, 0.12)'
-      ctx.lineWidth = 0.5
-      ctx.strokeRect(smX, smY, smW, smH)
+      drawBedRegion(BED_REGIONS.monitor1, smX, smY, smW, smH, 0.35)
+      // EKG trace
       ctx.strokeStyle = 'rgba(0, 255, 130, 0.6)'
       ctx.lineWidth = 1
       ctx.beginPath()
@@ -1485,6 +1518,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         else ctx.lineTo(smX + smW * 0.075 + i, ey)
       }
       ctx.stroke()
+      // SpO2 trace
       ctx.strokeStyle = 'rgba(0, 180, 255, 0.4)'
       ctx.lineWidth = 0.8
       ctx.beginPath()
@@ -1495,6 +1529,9 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         else ctx.lineTo(smX + smW * 0.075 + i, ey)
       }
       ctx.stroke()
+
+      // IV stand near anesthesia machine
+      drawBedRegion(BED_REGIONS.iv1, amX + 35, amY - 10, 18, 64, 0.2)
 
       // Floating dust in spotlight
       for (const p of S.orParticles) {
@@ -1537,6 +1574,9 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       const h = S.height
       const t = timestamp * 0.001
       S.time = t
+
+      // Global: disable image smoothing for pixel art
+      ctx.imageSmoothingEnabled = false
 
       ctx.clearRect(0, 0, w, h)
 
@@ -1583,6 +1623,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         height: '100%',
         pointerEvents: 'none',
         zIndex: 0,
+        imageRendering: 'pixelated',
       }}
     />
   )
