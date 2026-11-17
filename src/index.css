@@ -3,60 +3,444 @@
 @tailwind utilities;
 
 :root {
-  --bg: #F5F3EC;
-  --text: #1a1a1a;
-  --text-2: #6b6b6b;
-  --text-3: #9b9b9b;
-  --accent: #4571FF;
-  --green: #22c55e;
-  --yellow: #eab308;
-  --orange: #f97316;
-  --purple: #a855f7;
-  --pink: #ec4899;
-  --red: #ef4444;
-  --sep: #e5e2da;
+  --bg-deep: #0a1628;
+  --bg-mid: #0f2235;
+  --bg-teal: #1a3a4a;
+  --text-primary: #e0f0ff;
+  --text-secondary: #8ba4bd;
+  --text-muted: #4a6a85;
+  --accent: #00e5ff;
+  --accent-dim: #00e5ff40;
+  --correct: #00ff88;
+  --wrong: #ff4444;
+  --tier-0: #00ff88;
+  --tier-1: #ffdd00;
+  --tier-2: #ff8800;
+  --tier-3: #c466ff;
+  --tier-4: #ff44aa;
+  --sep: #1a3a4a;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  font-family: 'Archivo', system-ui, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  -webkit-font-smoothing: antialiased;
+html, body, #root {
   min-height: 100dvh;
+  overflow-x: hidden;
 }
+
+body {
+  font-family: 'IBM Plex Mono', 'Archivo', monospace, system-ui, sans-serif;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide scrollbar globally */
+::-webkit-scrollbar { display: none; }
+html { scrollbar-width: none; }
 
 .mono { font-family: 'IBM Plex Mono', monospace; }
 
-input[type="text"] {
-  font-family: 'Archivo', system-ui, sans-serif;
-  font-size: 18px;
-  background: white;
-  border: 2px solid var(--sep);
+/* ============================================
+   HOSPITAL GRADIENT BACKGROUNDS
+   ============================================ */
+.bg-hospital {
+  background: linear-gradient(180deg,
+    #162a45 0%,
+    #0f2235 25%,
+    #0d1f30 50%,
+    #0a1628 75%,
+    #060e1a 100%
+  );
+}
+
+.bg-hospital-lobby {
+  background: linear-gradient(180deg,
+    #1a3a4a 0%,
+    #142e3e 30%,
+    #0f2235 60%,
+    #0a1628 100%
+  );
+}
+
+/* ============================================
+   FLOATING MEDICAL SYMBOLS
+   ============================================ */
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.15;
+  }
+  90% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes floatSway {
+  0%, 100% { transform: translateX(0px); }
+  25% { transform: translateX(15px); }
+  75% { transform: translateX(-15px); }
+}
+
+@keyframes floatPulse {
+  0%, 100% { opacity: 0.08; }
+  50% { opacity: 0.2; }
+}
+
+.float-symbol {
+  position: absolute;
+  pointer-events: none;
+  font-size: 1.5rem;
+  opacity: 0;
+  animation: floatUp linear infinite;
+  filter: blur(0.5px);
+  color: var(--accent);
+}
+
+/* ============================================
+   GLOW EFFECTS
+   ============================================ */
+.glow-text {
+  text-shadow:
+    0 0 20px var(--accent-dim),
+    0 0 40px rgba(0, 229, 255, 0.1),
+    0 0 80px rgba(0, 229, 255, 0.05);
+}
+
+.glow-box {
+  box-shadow:
+    0 0 15px var(--accent-dim),
+    0 0 30px rgba(0, 229, 255, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glow-box-correct {
+  box-shadow:
+    0 0 20px rgba(0, 255, 136, 0.3),
+    0 0 40px rgba(0, 255, 136, 0.1);
+}
+
+.glow-box-wrong {
+  box-shadow:
+    0 0 20px rgba(255, 68, 68, 0.3),
+    0 0 40px rgba(255, 68, 68, 0.1);
+}
+
+/* ============================================
+   BUTTON STYLES
+   ============================================ */
+.btn-game {
+  background: rgba(0, 229, 255, 0.1);
+  border: 1px solid rgba(0, 229, 255, 0.4);
+  color: var(--accent);
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-game:hover {
+  background: rgba(0, 229, 255, 0.2);
+  box-shadow: 0 0 20px var(--accent-dim), 0 0 40px rgba(0, 229, 255, 0.1);
+}
+
+.btn-game:active {
+  transform: scale(0.97);
+}
+
+.btn-game:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.btn-game-primary {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.25) 0%, rgba(0, 229, 255, 0.1) 100%);
+  border: 1px solid rgba(0, 229, 255, 0.6);
+  color: #fff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-shadow: 0 0 10px var(--accent-dim);
+}
+
+.btn-game-primary:hover {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.4) 0%, rgba(0, 229, 255, 0.2) 100%);
+  box-shadow: 0 0 30px var(--accent-dim), 0 0 60px rgba(0, 229, 255, 0.15);
+}
+
+.btn-game-primary:active {
+  transform: scale(0.97);
+}
+
+/* ============================================
+   INPUT STYLES
+   ============================================ */
+input[type="text"].game-input {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  background: rgba(10, 22, 40, 0.8);
+  border: 1px solid rgba(0, 229, 255, 0.25);
   border-radius: 12px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   width: 100%;
   outline: none;
-  transition: border-color 0.15s;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
 }
-input[type="text"]:focus {
+
+input[type="text"].game-input::placeholder {
+  color: var(--text-muted);
+}
+
+input[type="text"].game-input:focus {
   border-color: var(--accent);
+  box-shadow: 0 0 15px var(--accent-dim), 0 0 30px rgba(0, 229, 255, 0.08);
+}
+
+input[type="text"].game-input.input-wrong {
+  border-color: var(--wrong);
+  box-shadow: 0 0 15px rgba(255, 68, 68, 0.3);
+}
+
+/* ============================================
+   TIMER BAR
+   ============================================ */
+.timer-bar {
+  height: 3px;
+  background: var(--accent);
+  transition: width 0.1s linear, background-color 0.3s ease;
+  box-shadow: 0 0 8px var(--accent-dim);
+}
+
+.timer-bar.timer-low {
+  background: var(--wrong);
+  box-shadow: 0 0 12px rgba(255, 68, 68, 0.4);
+}
+
+/* ============================================
+   DEPTH MARKERS
+   ============================================ */
+.depth-marker {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  writing-mode: horizontal-tb;
+  transition: color 0.5s ease, opacity 0.5s ease;
+}
+
+.depth-marker.active {
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--accent-dim);
+}
+
+/* ============================================
+   HUD ELEMENTS
+   ============================================ */
+.hud-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hud-value {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  15% { transform: translateX(-10px); }
+  30% { transform: translateX(8px); }
+  45% { transform: translateX(-6px); }
+  60% { transform: translateX(5px); }
+  75% { transform: translateX(-3px); }
+  90% { transform: translateX(2px); }
 }
 
 .shake {
-  animation: shake 0.4s ease-in-out;
-}
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  75% { transform: translateX(6px); }
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-.fade-in {
-  animation: fadeIn 0.3s ease-out;
+@keyframes wrongFlash {
+  0% { opacity: 0.6; }
+  100% { opacity: 0; }
 }
-@keyframes fadeIn {
+
+.wrong-flash {
+  animation: wrongFlash 0.5s ease-out both;
+}
+
+@keyframes promptSlideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes promptSlideOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-20px); }
+}
+
+.prompt-in {
+  animation: promptSlideIn 0.4s ease-out both;
+}
+
+.prompt-out {
+  animation: promptSlideOut 0.25s ease-in both;
+}
+
+@keyframes timerPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+.timer-pulse {
+  animation: timerPulse 0.8s ease-in-out infinite;
+}
+
+@keyframes pointsPop {
+  0% { transform: scale(0.3); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.points-pop {
+  animation: pointsPop 0.5s cubic-bezier(0.17, 0.89, 0.32, 1.25) both;
+}
+
+@keyframes profIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+.prof-answer-in {
+  animation: profIn 0.3s ease-out both;
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--drift, 20px), -200px) rotate(720deg) scale(0);
+    opacity: 0;
+  }
+}
+
+.confetti-particle {
+  animation: confettiFall 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes logoPulse {
+  0%, 100% { text-shadow: 0 0 20px var(--accent-dim), 0 0 60px rgba(0,229,255,0.08); }
+  50% { text-shadow: 0 0 30px rgba(0,229,255,0.4), 0 0 80px rgba(0,229,255,0.15); }
+}
+
+@keyframes borderPulse {
+  0%, 100% { border-color: rgba(0, 229, 255, 0.3); }
+  50% { border-color: rgba(0, 229, 255, 0.6); }
+}
+
+@keyframes descend {
+  0% { opacity: 0; transform: translateY(-30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.descend-in {
+  animation: descend 0.6s ease-out both;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+/* ============================================
+   SAFE AREA
+   ============================================ */
+.pb-safe {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
+
+/* ============================================
+   TIER NEON COLORS
+   ============================================ */
+.tier-glow-0 { text-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+.tier-glow-1 { text-shadow: 0 0 10px rgba(255, 221, 0, 0.5); }
+.tier-glow-2 { text-shadow: 0 0 10px rgba(255, 136, 0, 0.5); }
+.tier-glow-3 { text-shadow: 0 0 10px rgba(196, 102, 255, 0.5); }
+.tier-glow-4 { text-shadow: 0 0 10px rgba(255, 68, 170, 0.5); }
+
+/* ============================================
+   PROGRESS BLOCKS (HUD)
+   ============================================ */
+.progress-block {
+  width: 20px;
+  height: 8px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.progress-block.filled {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 6px var(--accent-dim);
+}
+
+.progress-block.current {
+  border-color: var(--accent);
+  animation: borderPulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   BACKGROUND DEPTH TRANSITION
+   ============================================ */
+.bg-depth-transition {
+  transition: background 1.5s ease-in-out;
 }
