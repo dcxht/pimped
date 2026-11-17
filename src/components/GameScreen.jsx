@@ -455,10 +455,16 @@ export default function GameScreen({ prompts, onFinish }) {
           </div>
         )}
 
-        {/* Prompt text */}
+        {/* Prompt text with backdrop */}
         <div
-          className={`text-center text-xl sm:text-2xl font-semibold leading-relaxed px-2 py-6 prompt-${slideDirection}`}
-          style={{ color: 'var(--text-primary)' }}
+          className={`text-center text-xl sm:text-2xl font-semibold leading-relaxed px-6 py-6 mx-2 rounded-xl prompt-${slideDirection}`}
+          style={{
+            color: 'var(--text-primary)',
+            background: 'rgba(8, 16, 30, 0.75)',
+            backdropFilter: 'blur(8px)',
+            border: '1px solid rgba(0, 229, 255, 0.1)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.5)',
+          }}
         >
           {prompt.prompt}
         </div>
