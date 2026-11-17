@@ -9,7 +9,7 @@ const TIER_LEGEND = [
   { label: 'Professor', points: 500, color: '#ff44aa' },
 ]
 
-const TIER_EMOJI = { 0: '\u{1F7E9}', 1: '\u{1F7E8}', 2: '\u{1F7E7}', 3: '\u{1F7EA}', 4: '\u{1F7EA}', [-1]: '\u2B1B' }
+const TIER_EMOJI = { 0: '💊', 1: '🩺', 2: '🧬', 3: '🧠', 4: '👑', [-1]: '💀' }
 
 const MEDICAL_SYMBOLS = ['+', 'Rx', 'Dx', 'Hx', 'Tx', 'Sx', 'ECG', 'BP', 'HR', 'SpO2', 'ABG', 'CBC', 'BMP', 'INR']
 
