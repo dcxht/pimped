@@ -118,7 +118,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     function drawCross(cx, cy, size, alpha) {
       const arm = size
       const thick = size * 0.35
-      ctx.fillStyle = `rgba(0, 229, 255, ${alpha})`
+      ctx.fillStyle = `rgba(255, 70, 70, ${alpha})`
       ctx.fillRect(cx - thick, cy - arm, thick * 2, arm * 2)
       ctx.fillRect(cx - arm, cy - thick, arm * 2, thick * 2)
     }
@@ -170,7 +170,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       ctx.stroke()
 
       // IV bag (small rounded rectangle)
-      ctx.fillStyle = `rgba(0, 229, 255, ${alpha * 0.3})`
+      ctx.fillStyle = `rgba(140, 180, 255, ${alpha * 0.4})`
       ctx.fillRect(bx + 5 * s, by - 54 * s, 8 * s, 12 * s)
       ctx.strokeRect(bx + 5 * s, by - 54 * s, 8 * s, 12 * s)
 
@@ -294,7 +294,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       const ambientOpacity = 0.08 - pct * 0.05
       if (ambientOpacity > 0.005) {
         const ambGrad = ctx.createRadialGradient(w * 0.5, 0, 0, w * 0.5, 0, h * 0.45)
-        ambGrad.addColorStop(0, `rgba(0, 229, 255, ${ambientOpacity})`)
+        ambGrad.addColorStop(0, `rgba(100, 180, 255, ${ambientOpacity})`)
         ambGrad.addColorStop(1, 'rgba(0, 229, 255, 0)')
         ctx.fillStyle = ambGrad
         ctx.fillRect(0, 0, w, h * 0.5)
@@ -336,8 +336,8 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       // Cross glow
       const crossGlowR = 12
       const crossGlow = ctx.createRadialGradient(crossCX, crossCY, 0, crossCX, crossCY, crossGlowR)
-      crossGlow.addColorStop(0, `rgba(0, 229, 255, ${buildingAlpha * 0.5})`)
-      crossGlow.addColorStop(1, 'rgba(0, 229, 255, 0)')
+      crossGlow.addColorStop(0, `rgba(255, 60, 60, ${buildingAlpha * 0.8})`)
+      crossGlow.addColorStop(1, 'rgba(255, 60, 60, 0)')
       ctx.fillStyle = crossGlow
       ctx.fillRect(crossCX - crossGlowR, crossCY - crossGlowR, crossGlowR * 2, crossGlowR * 2)
 
@@ -362,11 +362,11 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
 
           if (isLit) {
             ctx.fillStyle = flicker
-              ? `rgba(0, 255, 240, ${buildingAlpha * 2.5})`
-              : `rgba(0, 200, 220, ${buildingAlpha * 1.8})`
+              ? `rgba(255, 200, 80, ${buildingAlpha * 3})`
+              : `rgba(255, 180, 60, ${buildingAlpha * 2})`
             ctx.fillRect(wx, wy, winW, winH)
           } else {
-            ctx.fillStyle = `rgba(0, 100, 120, ${buildingAlpha * 0.5})`
+            ctx.fillStyle = `rgba(30, 50, 80, ${buildingAlpha * 0.8})`
             ctx.fillRect(wx, wy, winW, winH)
           }
         }
@@ -385,13 +385,13 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         for (let i = 0; i < lightCount; i++) {
           const lx = (w / (lightCount + 1)) * (i + 1) - lightW * 0.5
           // Light fixture rectangle
-          ctx.fillStyle = `rgba(180, 230, 255, ${za})`
+          ctx.fillStyle = `rgba(255, 240, 200, ${za})`
           ctx.fillRect(lx, zy, lightW, lightH)
 
           // Glow cone beneath
           const glowGrad = ctx.createLinearGradient(lx + lightW * 0.5, zy, lx + lightW * 0.5, zy + 40)
-          glowGrad.addColorStop(0, `rgba(180, 230, 255, ${za * 0.6})`)
-          glowGrad.addColorStop(1, 'rgba(180, 230, 255, 0)')
+          glowGrad.addColorStop(0, `rgba(255, 240, 200, ${za * 0.6})`)
+          glowGrad.addColorStop(1, 'rgba(255, 240, 200, 0)')
           ctx.fillStyle = glowGrad
           ctx.beginPath()
           ctx.moveTo(lx - 5, zy + lightH)
@@ -428,8 +428,8 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       const surgY = h * 0.78
       const surgR = 25
       const surgGlow = ctx.createRadialGradient(surgX, surgY, 0, surgX, surgY, surgR * 3)
-      surgGlow.addColorStop(0, `rgba(200, 240, 255, ${orAlpha * 1.5})`)
-      surgGlow.addColorStop(0.3, `rgba(140, 220, 255, ${orAlpha * 0.6})`)
+      surgGlow.addColorStop(0, `rgba(255, 250, 230, ${orAlpha * 2})`)
+      surgGlow.addColorStop(0.3, `rgba(255, 220, 180, ${orAlpha * 0.8})`)
       surgGlow.addColorStop(1, 'rgba(140, 220, 255, 0)')
       ctx.fillStyle = surgGlow
       ctx.fillRect(surgX - surgR * 3, surgY - surgR * 3, surgR * 6, surgR * 6)
@@ -469,7 +469,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       const ekgAlpha = 0.05 + pct * 0.05
       state.ekgOffset = (state.ekgOffset + 0.4) % cycleWidth
 
-      ctx.strokeStyle = `rgba(0, 229, 255, ${ekgAlpha})`
+      ctx.strokeStyle = `rgba(0, 255, 100, ${ekgAlpha})`
       ctx.lineWidth = 1.2
       ctx.beginPath()
 
@@ -500,9 +500,10 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         const r = p.size
 
         ctx.globalAlpha = p.opacity * (0.6 + 0.4 * Math.sin(state.time * 1.2 + p.phase))
-        ctx.shadowColor = 'rgba(0, 229, 255, 0.6)'
+        ctx.shadowColor = `rgba(${pColors[i % pColors.length]}, 0.6)`
         ctx.shadowBlur = 6
-        ctx.fillStyle = 'rgba(0, 220, 240, 0.9)'
+        const pColors = ['0, 220, 240', '0, 255, 100', '255, 200, 80', '255, 100, 100', '180, 140, 255']
+        ctx.fillStyle = `rgba(${pColors[i % pColors.length]}, 0.9)`
         ctx.beginPath()
         ctx.arc(px, py, r, 0, Math.PI * 2)
         ctx.fill()
