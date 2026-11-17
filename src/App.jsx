@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import HomeScreen from './components/HomeScreen'
 import GameScreen from './components/GameScreen'
+import ResultScreen from './components/ResultScreen'
 
 // ── Daily prompt selection ────────────────────────────
 function getDailyPrompts(allPrompts, dateStr) {
@@ -26,54 +27,6 @@ function getGameNumber(dateStr) {
   const launch = new Date('2026-11-17T00:00:00')
   const today = new Date(dateStr + 'T00:00:00')
   return Math.floor((today - launch) / 86400000) + 1
-}
-
-// ── Result Screen (inline) ───────────────────────────
-function ResultScreen({ results, gameNumber, onHome }) {
-  const totalScore = results.reduce((sum, r) => sum + (r.points || 0), 0)
-  const maxScore = 5 * 500
-
-  return (
-    <div className="min-h-screen" style={{ background: '#F5F3EC' }}>
-      <div className="max-w-lg mx-auto px-5 py-10 space-y-6">
-        <div className="text-center space-y-2">
-          <p className="text-xs font-bold tracking-widest text-gray-400 uppercase">
-            Round #{gameNumber} Complete
-          </p>
-          <p className="text-5xl font-black text-gray-900">{totalScore}</p>
-          <p className="text-sm text-gray-500">{totalScore} / {maxScore} possible</p>
-        </div>
-
-        <div className="space-y-3">
-          {results.map((r, i) => (
-            <div key={i} className="bg-white rounded-xl px-5 py-4 shadow-sm flex items-center justify-between">
-              <div className="space-y-1 min-w-0 flex-1">
-                <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-                  {r.specialty || `Prompt ${i + 1}`}
-                </p>
-                <p className="text-sm text-gray-700 truncate">{r.prompt}</p>
-                {r.answer && (
-                  <p className="text-sm font-semibold text-gray-900">{r.answer}</p>
-                )}
-              </div>
-              <div className="text-right ml-4 flex-shrink-0">
-                <p className="text-xl font-black text-gray-900">{r.points || 0}</p>
-                {r.tier && <p className="text-xs text-gray-400">{r.tier}</p>}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button
-          onClick={onHome}
-          className="w-full py-4 rounded-xl bg-gray-900 text-white text-lg font-bold tracking-wide
-                     active:scale-[0.97] transition-transform"
-        >
-          DONE
-        </button>
-      </div>
-    </div>
-  )
 }
 
 // ── Main App ─────────────────────────────────────────
@@ -107,16 +60,23 @@ export default function App() {
   }
 
   function handleGameFinish(gameResults) {
+    // Enrich results with prompt text and specialty from todayPrompts
+    const enriched = gameResults.map((r, i) => ({
+      ...r,
+      prompt: todayPrompts[r.promptIndex]?.prompt ?? todayPrompts[i]?.prompt ?? '',
+      specialty: todayPrompts[r.promptIndex]?.specialty ?? todayPrompts[i]?.specialty ?? '',
+    }))
+
     // Save to localStorage
     const dateStr = getTodayStr()
-    const totalScore = gameResults.reduce((sum, r) => sum + (r.points || 0), 0)
-    const payload = { totalScore, results: gameResults, playedAt: new Date().toISOString() }
+    const totalScore = enriched.reduce((sum, r) => sum + (r.points || 0), 0)
+    const payload = { totalScore, results: enriched, playedAt: new Date().toISOString() }
     localStorage.setItem(`pimped-played-${dateStr}`, JSON.stringify(payload))
 
     // Update streak
     updateStreak(dateStr)
 
-    setResults(gameResults)
+    setResults(enriched)
     setScreen('result')
   }
 
@@ -132,12 +92,10 @@ export default function App() {
     const diffDays = last ? Math.floor((today - last) / 86400000) : null
 
     if (diffDays === 1) {
-      // Consecutive day
       streak.current += 1
     } else if (diffDays === 0) {
       // Same day, no change
     } else {
-      // Streak broken or first play
       streak.current = 1
     }
 
@@ -169,6 +127,7 @@ export default function App() {
       {screen === 'result' && (
         <ResultScreen
           results={results}
+          prompts={todayPrompts}
           gameNumber={gameNumber}
           onHome={handleBackHome}
         />
