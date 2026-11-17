@@ -140,7 +140,7 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
         {/* LOGO */}
         <header className="text-center pt-10 pb-2">
           <h1
-            className="font-black tracking-tighter select-none glow-text"
+            className="pixel select-none glow-text"
             style={{
               fontSize: 'clamp(3.5rem, 12vw, 5rem)',
               lineHeight: 1,

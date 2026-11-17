@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import HospitalScene from './HospitalScene'
+import { playCorrect, playWrong, playTick, playTimeUp, playTierReveal, playPass, playGameStart } from '../utils/sounds'
 
 const TIMER_DURATION = 25000
 const TOTAL_PROMPTS = 5
@@ -245,6 +246,11 @@ export default function GameScreen({ prompts, onFinish }) {
       setTimeout(() => setShowConfetti(false), 1500)
     }
 
+    // Sound effects
+    if (passed) playPass()
+    else if (tier >= 0) { playCorrect(); setTimeout(() => playTierReveal(tier), 300) }
+    else playTimeUp()
+
     setTimeout(() => setRevealVisible(true), 50)
   }, [currentIndex, stopTimer])
 
@@ -263,6 +269,7 @@ export default function GameScreen({ prompts, onFinish }) {
       const points = TIER_POINTS[match.tier]
       handleReveal(typed, match.tier, points, elapsed, false)
     } else {
+      playWrong()
       setShaking(true)
       setWrongMessage(true)
       setWrongFlash(true)
