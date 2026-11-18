@@ -73,6 +73,21 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     return () => window.removeEventListener('resize', resize)
   }, [])
 
+  // Load muchopixels sprite sheets
+  const spritesRef = useRef({})
+  useEffect(() => {
+    const load = (name, src) => {
+      const img = new Image()
+      img.src = src
+      img.onload = () => { spritesRef.current[name] = img }
+    }
+    load('exteriors', '/sprites/mp-exteriors.png')
+    load('patient', '/sprites/mp-patient.png')
+    load('lobby', '/sprites/mp-lobby.png')
+    load('radiology', '/sprites/mp-radiology.png')
+    load('background', '/sprites/mp-background.png')
+  }, [])
+
   // Main loop
   useEffect(() => {
     const canvas = canvasRef.current
@@ -119,6 +134,20 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       // ========== 4. BUILDING SILHOUETTE ==========
       drawBuilding(ctx, w, h, ENTRANCE_Y, t)
 
+      // ========== 4b. PIXEL ART SPRITES (muchopixels) ==========
+      ctx.imageSmoothingEnabled = false
+      const sp = spritesRef.current
+
+      // Hospital exterior facade from mp-exteriors.png (top 160px of sheet = building entrance)
+      if (sp.exteriors) {
+        const ey = h * ENTRANCE_Y
+        const bw = w * 0.7
+        const bh = bw * (160 / 288)
+        ctx.globalAlpha = 0.6
+        ctx.drawImage(sp.exteriors, 0, 0, 288, 160, (w - bw) / 2, ey - bh, bw, bh)
+        ctx.globalAlpha = 1
+      }
+
       // ========== 5. ENTRANCE LINE (the "water surface") ==========
       drawEntranceLine(ctx, w, h, ENTRANCE_Y, t)
 
@@ -127,6 +156,41 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
 
       // ========== 7. HOSPITAL INTERIOR ELEMENTS (static scenery) ==========
       drawInteriorScenery(ctx, w, h, ENTRANCE_Y, t, depthNorm)
+
+      // ========== 7b. PIXEL ART INTERIOR SPRITES ==========
+      ctx.imageSmoothingEnabled = false
+      // Patient room equipment along left edge (beds, IV)
+      if (sp.patient && depthNorm > 0.1) {
+        const a = Math.min(0.4, depthNorm * 0.6)
+        ctx.globalAlpha = a
+        // Beds from patient sprite (top-left area, ~128x48)
+        ctx.drawImage(sp.patient, 0, 32, 128, 48, w * 0.02, h * 0.55, 80, 30)
+        ctx.drawImage(sp.patient, 0, 32, 128, 48, w * 0.85, h * 0.65, 70, 26)
+        // IV poles (mid area, ~32x64)
+        ctx.drawImage(sp.patient, 128, 0, 32, 80, w * 0.06, h * 0.45, 20, 50)
+        ctx.drawImage(sp.patient, 128, 0, 32, 80, w * 0.90, h * 0.55, 18, 45)
+        ctx.globalAlpha = 1
+      }
+      // Lobby items along edges (vending machines, chairs)
+      if (sp.lobby && depthNorm > 0.05) {
+        const a = Math.min(0.35, depthNorm * 0.5)
+        ctx.globalAlpha = a
+        // Vending machines (top-right area of lobby sheet, ~48x64)
+        ctx.drawImage(sp.lobby, 96, 0, 48, 64, w * 0.88, h * 0.42, 36, 48)
+        // Waiting chairs (bottom-left, ~96x32)
+        ctx.drawImage(sp.lobby, 0, 96, 96, 32, w * 0.03, h * 0.72, 60, 20)
+        ctx.globalAlpha = 1
+      }
+      // Radiology equipment deep in interior
+      if (sp.radiology && depthNorm > 0.4) {
+        const a = Math.min(0.3, (depthNorm - 0.4) * 0.8)
+        ctx.globalAlpha = a
+        // MRI machine (bottom-left of radiology sheet, ~64x48)
+        ctx.drawImage(sp.radiology, 0, 192, 64, 48, w * 0.3, h * 0.82, 60, 45)
+        // Surgical lights (top-right, ~48x48)
+        ctx.drawImage(sp.radiology, 160, 0, 48, 48, w * 0.5, h * 0.76, 40, 40)
+        ctx.globalAlpha = 1
+      }
 
       // ========== 8. ANIMATED HORIZONTAL ELEMENTS ==========
       drawMovingElements(ctx, w, h, t, depthNorm)

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; }
+body { width: 960px; height: 540px; overflow: hidden; }
+.sky {
+  width: 960px;
+  height: 540px;
+  background: linear-gradient(180deg, #0a0e1a 0%, #111833 30%, #1a2244 60%, #222b55 100%);
+  position: relative;
+  overflow: hidden;
+}
+/* Moon glow */
+.moon {
+  position: absolute;
+  top: 60px;
+  right: 180px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #e8e4d4 0%, #c8c4b4 40%, transparent 70%);
+  box-shadow: 0 0 40px 20px rgba(200, 196, 180, 0.15), 0 0 80px 40px rgba(200, 196, 180, 0.08);
+}
+/* Stars using box-shadow trick */
+.stars {
+  position: absolute;
+  top: 0; left: 0;
+  width: 2px; height: 2px;
+  background: transparent;
+  box-shadow:
+    45px 20px #ffffff, 120px 55px #ffffff, 200px 30px #cccccc,
+    280px 80px #ffffff, 350px 15px #dddddd, 420px 60px #ffffff,
+    500px 25px #cccccc, 580px 70px #ffffff, 650px 35px #ffffff,
+    720px 55px #dddddd, 800px 20px #ffffff, 880px 65px #cccccc,
+    930px 40px #ffffff, 60px 100px #dddddd, 150px 120px #ffffff,
+    240px 140px #cccccc, 330px 110px #ffffff, 440px 130px #dddddd,
+    550px 105px #ffffff, 660px 145px #ffffff, 770px 115px #cccccc,
+    850px 135px #ffffff, 90px 170px #ffffff, 180px 190px #dddddd,
+    310px 175px #ffffff, 470px 185px #cccccc, 590px 165px #ffffff,
+    700px 195px #ffffff, 820px 180px #dddddd, 910px 160px #ffffff,
+    30px 210px #ffffff, 170px 230px #cccccc, 260px 220px #ffffff,
+    380px 240px #dddddd, 510px 215px #ffffff, 630px 235px #ffffff,
+    740px 225px #cccccc, 860px 210px #ffffff, 940px 240px #dddddd,
+    75px 260px #ffffff, 195px 280px #ffffff, 345px 270px #dddddd,
+    455px 285px #ffffff, 565px 265px #cccccc, 685px 290px #ffffff,
+    795px 275px #ffffff, 895px 260px #dddddd;
+}
+.stars-small {
+  position: absolute;
+  top: 0; left: 0;
+  width: 1px; height: 1px;
+  background: transparent;
+  box-shadow:
+    35px 45px rgba(255,255,255,0.6), 95px 85px rgba(255,255,255,0.5),
+    155px 65px rgba(255,255,255,0.7), 225px 95px rgba(255,255,255,0.4),
+    305px 50px rgba(255,255,255,0.6), 395px 75px rgba(255,255,255,0.5),
+    465px 45px rgba(255,255,255,0.7), 535px 90px rgba(255,255,255,0.4),
+    615px 55px rgba(255,255,255,0.6), 695px 80px rgba(255,255,255,0.5),
+    775px 40px rgba(255,255,255,0.7), 845px 70px rgba(255,255,255,0.4),
+    55px 150px rgba(255,255,255,0.5), 135px 160px rgba(255,255,255,0.6),
+    215px 155px rgba(255,255,255,0.4), 295px 165px rgba(255,255,255,0.7),
+    375px 150px rgba(255,255,255,0.5), 455px 170px rgba(255,255,255,0.6),
+    535px 155px rgba(255,255,255,0.4), 615px 160px rgba(255,255,255,0.7),
+    695px 150px rgba(255,255,255,0.5), 775px 165px rgba(255,255,255,0.6),
+    855px 155px rgba(255,255,255,0.4), 925px 170px rgba(255,255,255,0.7);
+}
+/* Subtle purple nebula */
+.nebula {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background:
+    radial-gradient(ellipse 300px 200px at 25% 35%, rgba(80, 40, 120, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse 250px 150px at 70% 25%, rgba(40, 50, 120, 0.1) 0%, transparent 70%);
+}
+</style>
+</head>
+<body>
+<div class="sky">
+  <div class="nebula"></div>
+  <div class="stars"></div>
+  <div class="stars-small"></div>
+  <div class="moon"></div>
+</div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hospital Parallax Layers - Stack Test</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: monospace;
+  color: #aaa;
+  padding: 20px;
+}
+h1 {
+  color: #2dd4bf;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+h2 {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+/* Composite stack */
+.stack-container {
+  position: relative;
+  width: 960px;
+  height: 540px;
+  border: 1px solid #333;
+  margin-bottom: 40px;
+  overflow: hidden;
+}
+.stack-container img {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  height: 100%;
+}
+.layer-sky { z-index: 1; }
+.layer-building { z-index: 2; }
+.layer-entrance { z-index: 3; }
+.layer-interior { z-index: 4; }
+.layer-deep { z-index: 5; }
+
+/* Individual layer preview */
+.layers-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+.layer-card {
+  text-align: center;
+}
+.layer-card img {
+  width: 280px;
+  height: 158px;
+  border: 1px solid #333;
+  display: block;
+  margin-bottom: 4px;
+}
+.layer-card span {
+  font-size: 10px;
+  color: #666;
+}
+
+/* Checkerboard for transparency */
+.checker {
+  background-image:
+    linear-gradient(45deg, #1a1a1a 25%, transparent 25%),
+    linear-gradient(-45deg, #1a1a1a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #1a1a1a 75%),
+    linear-gradient(-45deg, transparent 75%, #1a1a1a 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  background-color: #111;
+}
+</style>
+</head>
+<body>
+  <h1>Hospital Parallax Background Layers</h1>
+  <h2>All 5 layers stacked (composite view)</h2>
+
+  <div class="stack-container">
+    <img src="bg-sky.png" class="layer-sky" alt="Layer 1: Sky">
+    <img src="bg-building.png" class="layer-building" alt="Layer 2: Building">
+    <img src="bg-entrance.png" class="layer-entrance" alt="Layer 3: Entrance">
+    <img src="bg-interior.png" class="layer-interior" alt="Layer 4: Interior">
+    <img src="bg-deep.png" class="layer-deep" alt="Layer 5: Deep">
+  </div>
+
+  <h2>Individual layers (checkerboard = transparent areas)</h2>
+  <div class="layers-row">
+    <div class="layer-card">
+      <img src="bg-sky.png" alt="Sky">
+      <span>1 - SKY (opaque, furthest back)</span>
+    </div>
+    <div class="layer-card checker">
+      <img src="bg-building.png" alt="Building">
+      <span>2 - BUILDING (transparent bg)</span>
+    </div>
+    <div class="layer-card checker">
+      <img src="bg-entrance.png" alt="Entrance">
+      <span>3 - ENTRANCE (transparent bg)</span>
+    </div>
+  </div>
+  <div class="layers-row">
+    <div class="layer-card checker">
+      <img src="bg-interior.png" alt="Interior">
+      <span>4 - INTERIOR (transparent bg)</span>
+    </div>
+    <div class="layer-card checker">
+      <img src="bg-deep.png" alt="Deep">
+      <span>5 - DEEP (transparent bg, closest)</span>
+    </div>
+  </div>
+</body>
+</html>

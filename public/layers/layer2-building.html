@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; }
+body { width: 960px; height: 540px; overflow: hidden; background: transparent; }
+.scene {
+  width: 960px;
+  height: 540px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* City skyline - left side */
+.building-left-1 {
+  position: absolute; bottom: 0; left: 0;
+  width: 80px; height: 220px;
+  background: #0d1117;
+}
+.building-left-2 {
+  position: absolute; bottom: 0; left: 70px;
+  width: 60px; height: 180px;
+  background: #12161f;
+}
+.building-left-3 {
+  position: absolute; bottom: 0; left: 120px;
+  width: 90px; height: 250px;
+  background: #0f1319;
+}
+
+/* Main hospital building */
+.hospital-main {
+  position: absolute; bottom: 0; left: 220px;
+  width: 520px; height: 380px;
+  background: linear-gradient(180deg, #141a24 0%, #111720 100%);
+}
+.hospital-wing-left {
+  position: absolute; bottom: 0; left: 220px;
+  width: 80px; height: 320px;
+  background: #12181f;
+}
+.hospital-wing-right {
+  position: absolute; bottom: 0; right: 160px;
+  width: 80px; height: 320px;
+  background: #12181f;
+}
+.hospital-top {
+  position: absolute; bottom: 380px; left: 350px;
+  width: 260px; height: 60px;
+  background: #141a24;
+}
+
+/* Red cross on top */
+.cross-h {
+  position: absolute; bottom: 400px; left: 460px;
+  width: 40px; height: 12px;
+  background: #cc3333;
+  box-shadow: 0 0 15px rgba(204, 51, 51, 0.4);
+}
+.cross-v {
+  position: absolute; bottom: 388px; left: 474px;
+  width: 12px; height: 40px;
+  background: #cc3333;
+  box-shadow: 0 0 15px rgba(204, 51, 51, 0.4);
+}
+
+/* City skyline - right side */
+.building-right-1 {
+  position: absolute; bottom: 0; right: 0;
+  width: 70px; height: 200px;
+  background: #0d1117;
+}
+.building-right-2 {
+  position: absolute; bottom: 0; right: 60px;
+  width: 50px; height: 160px;
+  background: #12161f;
+}
+.building-right-3 {
+  position: absolute; bottom: 0; right: 100px;
+  width: 80px; height: 240px;
+  background: #0f1319;
+}
+
+/* Windows - amber lit */
+.windows {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+}
+.win {
+  position: absolute;
+  width: 10px; height: 14px;
+  background: #d4a44a;
+  box-shadow: 0 0 6px rgba(212, 164, 74, 0.4);
+}
+.win.off {
+  background: #1a2030;
+  box-shadow: none;
+}
+/* Row 1 (top) of hospital */
+.w1 { bottom: 350px; left: 260px; }
+.w2 { bottom: 350px; left: 290px; }
+.w3 { bottom: 350px; left: 320px; }
+.w4 { bottom: 350px; left: 350px; }
+.w5 { bottom: 350px; left: 380px; }
+.w6 { bottom: 350px; left: 560px; }
+.w7 { bottom: 350px; left: 590px; }
+.w8 { bottom: 350px; left: 620px; }
+.w9 { bottom: 350px; left: 650px; }
+.w10 { bottom: 350px; left: 680px; }
+/* Row 2 */
+.w11 { bottom: 310px; left: 260px; }
+.w12 { bottom: 310px; left: 290px; }
+.w13 { bottom: 310px; left: 320px; }
+.w14 { bottom: 310px; left: 350px; }
+.w15 { bottom: 310px; left: 380px; }
+.w16 { bottom: 310px; left: 560px; }
+.w17 { bottom: 310px; left: 590px; }
+.w18 { bottom: 310px; left: 620px; }
+.w19 { bottom: 310px; left: 650px; }
+.w20 { bottom: 310px; left: 680px; }
+/* Row 3 */
+.w21 { bottom: 270px; left: 260px; }
+.w22 { bottom: 270px; left: 290px; }
+.w23 { bottom: 270px; left: 320px; }
+.w24 { bottom: 270px; left: 350px; }
+.w25 { bottom: 270px; left: 380px; }
+.w26 { bottom: 270px; left: 560px; }
+.w27 { bottom: 270px; left: 590px; }
+.w28 { bottom: 270px; left: 620px; }
+.w29 { bottom: 270px; left: 650px; }
+.w30 { bottom: 270px; left: 680px; }
+/* Row 4 */
+.w31 { bottom: 230px; left: 260px; }
+.w32 { bottom: 230px; left: 290px; }
+.w33 { bottom: 230px; left: 320px; }
+.w34 { bottom: 230px; left: 350px; }
+.w35 { bottom: 230px; left: 380px; }
+.w36 { bottom: 230px; left: 560px; }
+.w37 { bottom: 230px; left: 590px; }
+.w38 { bottom: 230px; left: 620px; }
+.w39 { bottom: 230px; left: 650px; }
+.w40 { bottom: 230px; left: 680px; }
+/* Center windows (between wings) */
+.wc1 { bottom: 350px; left: 430px; }
+.wc2 { bottom: 350px; left: 460px; }
+.wc3 { bottom: 350px; left: 490px; }
+.wc4 { bottom: 310px; left: 430px; }
+.wc5 { bottom: 310px; left: 460px; }
+.wc6 { bottom: 310px; left: 490px; }
+.wc7 { bottom: 270px; left: 430px; }
+.wc8 { bottom: 270px; left: 460px; }
+.wc9 { bottom: 270px; left: 490px; }
+.wc10 { bottom: 230px; left: 430px; }
+.wc11 { bottom: 230px; left: 460px; }
+.wc12 { bottom: 230px; left: 490px; }
+
+/* Side building windows */
+.ws1 { bottom: 160px; left: 20px; width: 8px; height: 10px; }
+.ws2 { bottom: 130px; left: 20px; width: 8px; height: 10px; }
+.ws3 { bottom: 160px; left: 50px; width: 8px; height: 10px; }
+.ws4 { bottom: 200px; right: 20px; width: 8px; height: 10px; }
+.ws5 { bottom: 170px; right: 20px; width: 8px; height: 10px; }
+.ws6 { bottom: 200px; right: 40px; width: 8px; height: 10px; }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="building-left-1"></div>
+  <div class="building-left-2"></div>
+  <div class="building-left-3"></div>
+  <div class="hospital-wing-left"></div>
+  <div class="hospital-main"></div>
+  <div class="hospital-wing-right"></div>
+  <div class="hospital-top"></div>
+  <div class="cross-h"></div>
+  <div class="cross-v"></div>
+  <div class="building-right-1"></div>
+  <div class="building-right-2"></div>
+  <div class="building-right-3"></div>
+  <div class="windows">
+    <div class="win w1"></div><div class="win off w2"></div><div class="win w3"></div>
+    <div class="win w4"></div><div class="win off w5"></div>
+    <div class="win w6"></div><div class="win w7"></div><div class="win off w8"></div>
+    <div class="win w9"></div><div class="win w10"></div>
+    <div class="win off w11"></div><div class="win w12"></div><div class="win w13"></div>
+    <div class="win off w14"></div><div class="win w15"></div>
+    <div class="win w16"></div><div class="win off w17"></div><div class="win w18"></div>
+    <div class="win w19"></div><div class="win off w20"></div>
+    <div class="win w21"></div><div class="win w22"></div><div class="win off w23"></div>
+    <div class="win w24"></div><div class="win w25"></div>
+    <div class="win off w26"></div><div class="win w27"></div><div class="win w28"></div>
+    <div class="win off w29"></div><div class="win w30"></div>
+    <div class="win w31"></div><div class="win off w32"></div><div class="win w33"></div>
+    <div class="win w34"></div><div class="win w35"></div>
+    <div class="win w36"></div><div class="win w37"></div><div class="win off w38"></div>
+    <div class="win off w39"></div><div class="win w40"></div>
+    <div class="win wc1"></div><div class="win off wc2"></div><div class="win wc3"></div>
+    <div class="win wc4"></div><div class="win wc5"></div><div class="win off wc6"></div>
+    <div class="win off wc7"></div><div class="win wc8"></div><div class="win wc9"></div>
+    <div class="win wc10"></div><div class="win off wc11"></div><div class="win wc12"></div>
+    <div class="win off ws1"></div><div class="win ws2"></div><div class="win off ws3"></div>
+    <div class="win ws4"></div><div class="win off ws5"></div><div class="win ws6"></div>
+  </div>
+</div>
+</body>
+</html>

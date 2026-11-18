@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+* { margin: 0; padding: 0; }
+body { width: 960px; height: 540px; overflow: hidden; background: transparent; }
+.scene {
+  width: 960px;
+  height: 540px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Corridor gradient background */
+.corridor {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: linear-gradient(180deg, transparent 0%, rgba(14, 20, 28, 0.6) 30%, rgba(10, 15, 22, 0.85) 100%);
+}
+
+/* Perspective corridor walls */
+.wall-left {
+  position: absolute;
+  top: 120px; left: 180px;
+  width: 8px; height: 420px;
+  background: linear-gradient(180deg, #1a2a30 0%, #0e1820 100%);
+  box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+}
+.wall-right {
+  position: absolute;
+  top: 120px; right: 180px;
+  width: 8px; height: 420px;
+  background: linear-gradient(180deg, #1a2a30 0%, #0e1820 100%);
+  box-shadow: -2px 0 10px rgba(0,0,0,0.3);
+}
+
+/* Floor */
+.floor {
+  position: absolute;
+  bottom: 0; left: 180px;
+  width: 600px; height: 180px;
+  background: linear-gradient(180deg, #121a20 0%, #0d1318 100%);
+  border-top: 1px solid #1a2530;
+}
+/* Floor tiles */
+.tile-line {
+  position: absolute;
+  height: 1px;
+  background: rgba(45, 212, 191, 0.05);
+  left: 200px; width: 560px;
+}
+.tl1 { bottom: 150px; }
+.tl2 { bottom: 120px; }
+.tl3 { bottom: 90px; }
+.tl4 { bottom: 60px; }
+.tl5 { bottom: 30px; }
+
+/* Doors on sides */
+.door {
+  position: absolute;
+  width: 40px; height: 80px;
+  background: #0f1a22;
+  border: 2px solid #1a2a35;
+  border-radius: 2px;
+}
+.door-num {
+  position: absolute;
+  width: 16px; height: 10px;
+  background: rgba(45, 212, 191, 0.2);
+  border-radius: 1px;
+}
+.d1 { top: 200px; left: 200px; }
+.d1n { top: 195px; left: 212px; }
+.d2 { top: 200px; left: 280px; }
+.d2n { top: 195px; left: 292px; }
+.d3 { top: 200px; right: 200px; }
+.d3n { top: 195px; right: 212px; }
+.d4 { top: 200px; right: 280px; }
+.d4n { top: 195px; right: 292px; }
+.d5 { top: 310px; left: 200px; }
+.d5n { top: 305px; left: 212px; }
+.d6 { top: 310px; right: 200px; }
+.d6n { top: 305px; right: 212px; }
+
+/* EKG monitor */
+.monitor {
+  position: absolute;
+  top: 170px; right: 220px;
+  width: 60px; height: 40px;
+  background: #0a1015;
+  border: 2px solid #1a2530;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.ekg-line {
+  position: absolute;
+  top: 18px; left: 0;
+  width: 60px; height: 2px;
+  background: transparent;
+  box-shadow:
+    0px 0px #22c55e,
+    5px -2px #22c55e,
+    10px 0px #22c55e,
+    15px 0px #22c55e,
+    20px -8px #22c55e,
+    22px 6px #22c55e,
+    25px -12px #22c55e,
+    28px 4px #22c55e,
+    30px 0px #22c55e,
+    35px 0px #22c55e,
+    40px -2px #22c55e,
+    45px 0px #22c55e,
+    50px 0px #22c55e,
+    55px -2px #22c55e;
+}
+.monitor-glow {
+  position: absolute;
+  top: 165px; right: 215px;
+  width: 70px; height: 50px;
+  background: radial-gradient(ellipse, rgba(34, 197, 94, 0.08) 0%, transparent 70%);
+}
+
+/* IV stand */
+.iv-pole {
+  position: absolute;
+  top: 180px; left: 240px;
+  width: 3px; height: 120px;
+  background: #2a3540;
+}
+.iv-hook {
+  position: absolute;
+  top: 175px; left: 232px;
+  width: 18px; height: 3px;
+  background: #2a3540;
+}
+.iv-bag {
+  position: absolute;
+  top: 178px; left: 234px;
+  width: 10px; height: 16px;
+  background: rgba(45, 212, 191, 0.15);
+  border: 1px solid rgba(45, 212, 191, 0.25);
+  border-radius: 2px;
+}
+.iv-line {
+  position: absolute;
+  top: 194px; left: 239px;
+  width: 1px; height: 40px;
+  background: rgba(45, 212, 191, 0.1);
+}
+
+/* Ceiling lights */
+.ceiling-light {
+  position: absolute;
+  width: 80px; height: 6px;
+  background: rgba(200, 210, 220, 0.15);
+  border-radius: 3px;
+  box-shadow: 0 4px 20px rgba(200, 210, 220, 0.08);
+}
+.cl1 { top: 115px; left: 320px; }
+.cl2 { top: 115px; left: 500px; }
+
+/* Teal accent strip on floor */
+.teal-strip {
+  position: absolute;
+  bottom: 0; left: 460px;
+  width: 40px; height: 180px;
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.03) 0%, rgba(45, 212, 191, 0.08) 100%);
+}
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="corridor"></div>
+  <div class="floor"></div>
+  <div class="tile-line tl1"></div>
+  <div class="tile-line tl2"></div>
+  <div class="tile-line tl3"></div>
+  <div class="tile-line tl4"></div>
+  <div class="tile-line tl5"></div>
+  <div class="wall-left"></div>
+  <div class="wall-right"></div>
+  <div class="door d1"></div><div class="door-num d1n"></div>
+  <div class="door d2"></div><div class="door-num d2n"></div>
+  <div class="door d3"></div><div class="door-num d3n"></div>
+  <div class="door d4"></div><div class="door-num d4n"></div>
+  <div class="door d5"></div><div class="door-num d5n"></div>
+  <div class="door d6"></div><div class="door-num d6n"></div>
+  <div class="monitor-glow"></div>
+  <div class="monitor"><div class="ekg-line"></div></div>
+  <div class="iv-pole"></div>
+  <div class="iv-hook"></div>
+  <div class="iv-bag"></div>
+  <div class="iv-line"></div>
+  <div class="ceiling-light cl1"></div>
+  <div class="ceiling-light cl2"></div>
+  <div class="teal-strip"></div>
+</div>
+</body>
+</html>
