@@ -274,6 +274,22 @@ function drawFloor(ctx, idx, y, w, h, t, sp, px) {
     case 0: drawExterior(ctx, y, w, h, t, sp, px); break
     default: drawInterior(ctx, idx, y, w, h, t, sp, px); break
   }
+
+  // Ambient EKG heartbeat line near bottom of every floor
+  if (idx > 0) {
+    const ekgY = y + h * 0.78
+    const speed = t * 0.06
+    const alpha = 0.08 + idx * 0.04 // deeper floors = more visible
+    ctx.strokeStyle = `rgba(90,197,79,${alpha})`
+    ctx.lineWidth = 1.5
+    ctx.beginPath()
+    for (let x = 0; x < w; x += 2) {
+      const phase = (x + speed) % 140
+      let dy = phase > 50 && phase < 54 ? -12 : phase > 54 && phase < 58 ? 18 : phase > 58 && phase < 62 ? -7 : Math.sin((x + speed) * 0.012) * 1.2
+      if (x === 0) ctx.moveTo(x, ekgY + dy); else ctx.lineTo(x, ekgY + dy)
+    }
+    ctx.stroke()
+  }
 }
 
 // Room background: tiled wall texture + tiled floor texture from tileset
@@ -365,24 +381,39 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
     const midH = totalH * (96 / 240)
     const botH = totalH * (64 / 240)
 
+    // Building ambient glow (hospital lit up at night - blends hard edges)
+    const glowR = Math.max(bw, totalH) * 0.7
+    const buildCY = buildTop + totalH * 0.4
+    const glow = ctx.createRadialGradient(w / 2, buildCY, totalH * 0.2, w / 2, buildCY, glowR)
+    glow.addColorStop(0, 'rgba(0,152,220,0.06)')
+    glow.addColorStop(0.4, 'rgba(0,105,170,0.03)')
+    glow.addColorStop(1, 'rgba(0,105,170,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(0, y, w, h)
+
     // Building shadow
-    ctx.fillStyle = 'rgba(26,25,50,0.12)'
-    ctx.fillRect(bx + 6, buildTop + 6, bw, totalH)
+    ctx.fillStyle = 'rgba(2,4,10,0.2)'
+    ctx.fillRect(bx + 8, buildTop + 8, bw, totalH)
 
     // 3 facade bands filling the building area
     dr(ctx, ext, SP.extTop, bx, buildTop, bw, topH)
     dr(ctx, ext, SP.extMid, bx, buildTop + topH, bw, midH)
     dr(ctx, ext, SP.extBot, bx, buildTop + topH + midH, bw, botH)
 
-    // Window glow
+    // Warm window glow (more prominent, animated)
     for (let r = 0; r < 3; r++) {
       for (let c = 0; c < 6; c++) {
         if (Math.sin(t * 0.0008 + r * 2.3 + c * 1.7) < -0.3) continue
-        const fl = 0.3 + 0.2 * Math.sin(t * 0.002 + r + c * 3)
-        ctx.globalAlpha = fl * 0.08
+        const fl = 0.4 + 0.3 * Math.sin(t * 0.002 + r + c * 3)
+        ctx.globalAlpha = fl * 0.12
         ctx.fillStyle = '#ffb84d'
         const ww = bw * 0.05, wh = topH * 0.4
-        ctx.fillRect(bx + bw * 0.06 + c * bw * 0.15, buildTop + r * (totalH / 3) + (totalH / 3 - wh) / 2, ww, wh)
+        const wx = bx + bw * 0.06 + c * bw * 0.15
+        const wy = buildTop + r * (totalH / 3) + (totalH / 3 - wh) / 2
+        ctx.fillRect(wx, wy, ww, wh)
+        // Soft halo around window
+        ctx.globalAlpha = fl * 0.03
+        ctx.fillRect(wx - 4, wy - 4, ww + 8, wh + 8)
       }
     }
     ctx.globalAlpha = 1
