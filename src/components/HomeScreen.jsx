@@ -358,6 +358,11 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: 14,
+                background: 'rgba(6, 12, 24, 0.55)',
+                backdropFilter: 'blur(4px)',
+                borderRadius: 16,
+                padding: '20px 28px',
+                border: '1px solid rgba(255,255,255,0.06)',
               }}
             >
               {/* Score */}
@@ -432,7 +437,13 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
             </div>
           ) : (
             /* PRE-GAME: game number + date */
-            <div>
+            <div style={{
+              background: 'rgba(6, 12, 24, 0.5)',
+              backdropFilter: 'blur(4px)',
+              borderRadius: 12,
+              padding: '12px 20px',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}>
               {gameNumber != null && (
                 <p
                   className="mono"
