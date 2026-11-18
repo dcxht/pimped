@@ -481,7 +481,7 @@ export default function GameScreen({ prompts, onFinish }) {
           className={`text-center text-xl sm:text-2xl font-semibold leading-relaxed px-6 py-6 mx-2 rounded-xl prompt-${slideDirection}`}
           style={{
             color: 'var(--text-primary)',
-            background: 'rgba(8, 16, 30, 0.75)',
+            background: 'rgba(8, 16, 30, 0.5)',
             backdropFilter: 'blur(8px)',
             border: '1px solid rgba(0, 229, 255, 0.1)',
             textShadow: '0 1px 3px rgba(0,0,0,0.5)',

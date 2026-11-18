@@ -162,9 +162,9 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
         <div
           className="rounded-xl overflow-hidden border"
           style={{
-            background: 'rgba(10, 22, 40, 0.7)',
+            background: 'rgba(10, 22, 40, 0.4)',
             borderColor: 'rgba(0, 229, 255, 0.15)',
-            backdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(6px)',
             animation: mounted ? 'slideUp 0.6s ease-out 0.15s both' : 'none',
           }}
         >
@@ -297,7 +297,7 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
         <div
           className="rounded-xl px-6 py-5 border"
           style={{
-            background: 'rgba(10, 22, 40, 0.5)',
+            background: 'rgba(10, 22, 40, 0.3)',
             borderColor: 'rgba(255, 255, 255, 0.06)',
             animation: mounted ? 'slideUp 0.6s ease-out 0.4s both' : 'none',
           }}
@@ -324,7 +324,7 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
         <div
           className="rounded-xl px-6 py-5 border"
           style={{
-            background: 'rgba(10, 22, 40, 0.5)',
+            background: 'rgba(10, 22, 40, 0.3)',
             borderColor: 'rgba(255, 255, 255, 0.06)',
             animation: mounted ? 'slideUp 0.6s ease-out 0.5s both' : 'none',
           }}
