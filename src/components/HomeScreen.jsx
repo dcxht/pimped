@@ -397,12 +397,12 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
               <span
                 className="mono"
                 style={{
-                  fontSize: 11,
+                  fontSize: 13,
                   fontWeight: 700,
                   textTransform: 'uppercase',
                   letterSpacing: '0.12em',
                   color: scoreTier.color,
-                  textShadow: `0 0 12px ${scoreTier.color}80, ${ts}`,
+                  textShadow: `0 0 14px ${scoreTier.color}aa, 0 1px 4px rgba(0,0,0,0.8)`,
                 }}
               >
                 {scoreTier.label}
@@ -425,14 +425,14 @@ export default function HomeScreen({ todayPrompts, gameNumber, onPlay, onPractic
               <div
                 className="mono"
                 style={{
-                  fontSize: 13,
-                  color: 'var(--text-muted)',
-                  textShadow: ts,
+                  fontSize: 14,
+                  color: 'var(--text-secondary)',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.8)',
                   marginTop: 8,
                 }}
               >
                 Next in{' '}
-                <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{countdown}</span>
+                <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{countdown}</span>
               </div>
             </div>
           ) : (
