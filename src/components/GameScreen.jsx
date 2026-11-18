@@ -385,7 +385,7 @@ export default function GameScreen({ prompts, onFinish }) {
   const isTimerLow = Math.ceil(timeLeft / 1000) <= 5
   return (
     <div className="relative min-h-[100dvh] overflow-hidden">
-      <HospitalScene depth={totalScore} />
+      <HospitalScene depth={totalScore} floor={Math.min(4, results.length)} />
       <Confetti active={showConfetti} />
       <div className="relative z-10 min-h-[100dvh] flex flex-col">
 

@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(git:*)",
+      "Bash(gh:*)",
+      "Bash(vercel:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(rm:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(curl:*)",
+      "Bash(dig:*)",
+      "Bash(python3:*)",
+      "Bash(pip3:*)",
+      "Bash(sips:*)",
+      "Bash(base64:*)",
+      "Read",
+      "Write",
+      "Edit"
+    ]
+  }
+}
