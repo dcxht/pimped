@@ -231,7 +231,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     if (!canvas) return
     const ctx = canvas.getContext('2d')
 
-    const ENTRANCE_Y = 0.32
+    const ENTRANCE_Y = 0.42
 
     const frame = (t) => {
       const w = canvas.width, h = canvas.height
