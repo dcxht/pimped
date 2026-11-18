@@ -181,17 +181,26 @@ export default function HospitalScene({ depth = 0, floor = 0, maxDepth = 2500 })
       for (let i = 0; i < 4; i++) {
         const by = (i + 1) * h - camY
         if (by < -beamH || by > h + beamH) continue
-        ctx.fillStyle = '#5d5d5d'
+        ctx.fillStyle = '#0e1420'
         ctx.fillRect(0, by - beamH / 2, w, beamH)
-        ctx.fillStyle = '#858585'
+        ctx.fillStyle = '#2a3444'
         ctx.fillRect(0, by - beamH / 2, w, 3)
-        ctx.fillStyle = '#1a1932'
+        ctx.fillStyle = '#060a10'
         ctx.fillRect(0, by + beamH / 2 - 2, w, 2)
       }
 
-      // Very subtle scanlines
-      ctx.fillStyle = 'rgba(0,0,0,0.012)'
-      for (let sy = 0; sy < h; sy += 4) ctx.fillRect(0, sy, w, 1)
+      // VIGNETTE - Krillion uses rgba(2,4,10,0.85) at edges
+      const vigR = Math.max(w, h) * 0.65
+      const vig = ctx.createRadialGradient(w / 2, h * 0.45, vigR * 0.3, w / 2, h * 0.45, vigR)
+      vig.addColorStop(0, 'rgba(0,0,0,0)')
+      vig.addColorStop(0.55, 'rgba(0,0,0,0)')
+      vig.addColorStop(1, 'rgba(2,4,10,0.75)')
+      ctx.fillStyle = vig
+      ctx.fillRect(0, 0, w, h)
+
+      // CRT SCANLINES - Krillion uses 0.18 opacity, 1px every 3px
+      ctx.fillStyle = 'rgba(0,0,0,0.12)'
+      for (let sy = 0; sy < h; sy += 3) ctx.fillRect(0, sy, w, 1)
 
       drawElevator(ctx, w, h, cam)
 
@@ -222,34 +231,36 @@ function drawFloor(ctx, idx, y, w, h, t, sp, px) {
 
 // Room background: tiled wall texture + tiled floor texture from tileset
 function drawRoomBG(ctx, y, w, h, sp) {
-  // Fill with tileset wall color as base
-  ctx.fillStyle = '#c7cfdd'
+  // Fill with darker tileset wall color (Krillion-style depth)
+  ctx.fillStyle = '#2a3444'
   ctx.fillRect(0, y, w, h)
 
   // Tile the wall panel texture across the whole room
   if (sp?.wal?.ok) {
-    ctx.globalAlpha = 0.6
+    ctx.globalAlpha = 0.3
     drTile(ctx, sp.wal, SP.walPanel, 0, y, w, h * 0.4)
-    ctx.globalAlpha = 0.4
+    ctx.globalAlpha = 0.2
     drTile(ctx, sp.wal, SP.walPanel, 0, y + h * 0.4, w, h * 0.3)
     ctx.globalAlpha = 1
 
     // Floor tiles at bottom
+    ctx.globalAlpha = 0.4
     drTile(ctx, sp.wal, SP.walPanel, 0, y + h * 0.82, w, h * 0.18)
+    ctx.globalAlpha = 1
   }
 
   // Floor line
-  ctx.fillStyle = '#5d5d5d'
+  ctx.fillStyle = '#1a1932'
   ctx.fillRect(0, y + h * 0.82, w, 3)
-  ctx.fillStyle = '#b4b4b4'
+  ctx.fillStyle = '#3a4858'
   ctx.fillRect(0, y + h * 0.82 - 1, w, 1)
 
-  // Side walls (darker)
+  // Side walls (darker, more depth)
   const wallW = w * 0.05
-  ctx.fillStyle = '#92a1b9'
+  ctx.fillStyle = '#1a2434'
   ctx.fillRect(0, y, wallW, h)
   ctx.fillRect(w - wallW, y, wallW, h)
-  ctx.fillStyle = '#b4b4b4'
+  ctx.fillStyle = '#3a4858'
   ctx.fillRect(wallW, y, 2, h)
   ctx.fillRect(w - wallW - 2, y, 2, h)
 }
@@ -259,19 +270,19 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
   if (!sp) return
   const { ext, bg } = sp
 
-  // Sky - only top 25%
-  ctx.fillStyle = '#0098dc'
-  ctx.fillRect(0, y, w, h * 0.25)
-  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.25)
-  skyG.addColorStop(0, 'rgba(90,185,232,0.5)')
-  skyG.addColorStop(1, 'rgba(0,152,220,0)')
+  // Sky - deeper, richer like Krillion's teal-to-navy
+  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.28)
+  skyG.addColorStop(0, '#1a3a5c')
+  skyG.addColorStop(0.4, '#1e4a6a')
+  skyG.addColorStop(0.7, '#245878')
+  skyG.addColorStop(1, '#2a6888')
   ctx.fillStyle = skyG
-  ctx.fillRect(0, y, w, h * 0.25)
+  ctx.fillRect(0, y, w, h * 0.28)
 
   // Ground - bottom 15%
-  ctx.fillStyle = '#858585'
+  ctx.fillStyle = '#1a1932'
   ctx.fillRect(0, y + h * 0.85, w, h * 0.15)
-  ctx.fillStyle = '#b4b4b4'
+  ctx.fillStyle = '#2a2942'
   ctx.fillRect(0, y + h * 0.85, w, h * 0.04)
 
   // Clouds (bigger)
