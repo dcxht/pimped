@@ -216,46 +216,19 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
         return
       }
 
-      // Determine current and next scene, plus crossfade alpha
-      const idx = getSceneIndex(d)
+      // Smooth depth interpolation for fluid transitions
+      smoothDepthRef.current += (d - smoothDepthRef.current) * 0.08
+
+      const sd = smoothDepthRef.current
+      const idx = getSceneIndex(sd)
       const scene = SCENES[idx]
       const img = imagesRef.current[scene.src]
 
-      // Check if we're in a crossfade zone near a boundary
-      let blendAlpha = 0
-      let blendImg = null
-
-      if (idx < SCENES.length - 1) {
-        const boundary = scene.max
-        const distToBoundary = boundary - d
-        if (distToBoundary < CROSSFADE_RANGE && distToBoundary >= 0) {
-          blendAlpha = 1 - (distToBoundary / CROSSFADE_RANGE)
-          blendImg = imagesRef.current[SCENES[idx + 1].src]
-        }
-      }
-      if (idx > 0) {
-        const prevBoundary = SCENES[idx - 1].max
-        const distFromPrev = d - prevBoundary
-        if (distFromPrev >= 0 && distFromPrev < CROSSFADE_RANGE) {
-          blendAlpha = distFromPrev / CROSSFADE_RANGE
-          blendImg = imagesRef.current[SCENES[idx - 1].src]
-          // Swap: prev scene fades out, current fades in
-          drawCover(ctx, blendImg, w, h, 1 - blendAlpha, t)
-          drawCover(ctx, img, w, h, blendAlpha, t)
-          // skip the normal draw below
-          blendImg = null
-          blendAlpha = 0
-        }
-      }
-
-      if (blendAlpha === 0 && blendImg === null) {
-        // No crossfade, draw current scene at full opacity
-        drawCover(ctx, img, w, h, 1, t)
-      } else if (blendImg) {
-        // Crossfading into next scene
-        drawCover(ctx, img, w, h, 1 - blendAlpha, t)
-        drawCover(ctx, blendImg, w, h, blendAlpha, t)
-      }
+      // Simply draw the current scene at full opacity
+      // The smoothDepthRef creates a fluid transition between depth jumps
+      // No ugly alpha crossfade - just a clean instant scene switch
+      // with the smooth depth easing making it feel natural
+      drawCover(ctx, img, w, h, 1, t)
 
       // -- Overlays --
       drawParticles(ctx, w, h, t)
