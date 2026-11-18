@@ -126,12 +126,56 @@ function drTile(ctx, sh, region, x, y, totalW, dh) {
   ctx.restore()
 }
 
+// Floating particles (like Krillion's bubbles but medical-themed)
+function createParticles() {
+  return Array.from({ length: 30 }, () => ({
+    x: Math.random(),
+    y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.00008,
+    vy: -0.00004 - Math.random() * 0.00012,
+    size: 0.8 + Math.random() * 2.5,
+    alpha: 0.04 + Math.random() * 0.12,
+    phase: Math.random() * Math.PI * 2,
+    glow: Math.random() > 0.7, // 30% of particles glow
+  }))
+}
+
+function drawParticles(ctx, w, h, t, particles) {
+  for (const p of particles) {
+    p.x += p.vx + Math.sin(t * 0.0003 + p.phase) * 0.00003
+    p.y += p.vy
+    if (p.y < -0.03) { p.y = 1.03; p.x = Math.random() }
+    if (p.x < -0.02 || p.x > 1.02) p.x = Math.random()
+
+    const flicker = 0.5 + 0.5 * Math.sin(t * 0.002 + p.phase)
+    const a = p.alpha * flicker
+    const px = p.x * w, py = p.y * h
+
+    if (p.glow) {
+      // Glowing particles (like tiny indicator lights floating)
+      ctx.globalAlpha = a * 0.3
+      ctx.fillStyle = '#00cdf9'
+      ctx.beginPath()
+      ctx.arc(px, py, p.size * 4, 0, Math.PI * 2)
+      ctx.fill()
+    }
+
+    ctx.globalAlpha = a
+    ctx.fillStyle = p.glow ? '#5ac54f' : 'rgba(199,207,221,0.8)'
+    ctx.beginPath()
+    ctx.arc(px, py, p.size, 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+}
+
 export default function HospitalScene({ depth = 0, floor = 0, maxDepth = 2500 }) {
   const canvasRef = useRef(null)
   const rafRef = useRef(null)
   const floorRef = useRef(floor)
   const camRef = useRef(floor)
   const sheetsRef = useRef(null)
+  const particlesRef = useRef(createParticles())
 
   floorRef.current = floor
 
@@ -188,6 +232,9 @@ export default function HospitalScene({ depth = 0, floor = 0, maxDepth = 2500 })
         ctx.fillStyle = '#060a10'
         ctx.fillRect(0, by + beamH / 2 - 2, w, 2)
       }
+
+      // Floating particles (like Krillion's bubbles)
+      drawParticles(ctx, w, h, t, particlesRef.current)
 
       // VIGNETTE - Krillion uses rgba(2,4,10,0.85) at edges
       const vigR = Math.max(w, h) * 0.65
