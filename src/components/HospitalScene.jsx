@@ -1,7 +1,6 @@
-// HospitalScene - Cross-section hospital skyscraper
-// Camera scrolls DOWN through floors as questions are answered
-// All visuals from muchopixels tileset - no custom backgrounds
-// Colors sampled from tileset: walls #c7cfdd, floor #858585, accents #5ac54f/#00cdf9
+// HospitalScene - Hospital cross-section using ONLY muchopixels tileset art
+// All backgrounds are tiled tileset textures, all sprites at correct aspect ratios
+// Camera scrolls between 5 floors as questions are answered
 
 import { useRef, useEffect } from 'react'
 
@@ -15,80 +14,57 @@ const SHEET_SRCS = {
   bg:  '/sprites/mp-background.png',  // 256x159
 }
 
-// Exact sprite regions (from pixel analysis - content starts at ~16px border)
-// Format: [sx, sy, sw, sh]
+// Exact sprite regions from pixel boundary analysis [sx, sy, sw, sh]
 const SP = {
-  // mp-exteriors
-  extTop:     [16, 16, 256, 80],    // glass window ceiling
-  extMid:     [16, 112, 256, 96],   // facade with orange accent
-  extBot:     [16, 224, 256, 64],   // blue panels + entrance
-  extText:    [34, 295, 172, 18],   // "HOSPITAL" text (individual letters)
-  extAmb1:    [16, 324, 160, 60],   // ambulance white/red
-  extAmb2:    [80, 388, 160, 60],   // ambulance blue
-  extBadge:   [192, 328, 32, 51],   // star of life badge
-
-  // mp-background
-  bgCloud:    [128, 0, 80, 32],     // cloud
-  bgSun:      [208, 0, 32, 32],     // sun
-  bgCity:     [96, 48, 64, 32],     // city silhouette
-
-  // mp-lobby
-  lobChairs:  [22, 10, 36, 54],     // waiting chair group
-  lobVend:    [64, 16, 192, 48],    // vending machines row
-  lobDesk:    [20, 74, 40, 86],     // reception side piece
-  lobCounter: [64, 72, 48, 88],     // counter/desk
-  lobPanels:  [128, 72, 128, 88],   // monitors + dark panels + display
-
-  // mp-patient
-  patChair1:  [22, 22, 20, 26],     // red/blue chair
-  patChair2:  [54, 22, 20, 26],     // green/purple chair
-  patBed1:    [86, 18, 36, 30],     // bed variant 1 (green/blue)
-  patBed2:    [134, 18, 36, 30],    // bed variant 2 (teal/red)
-  patChair3:  [22, 54, 20, 26],     // chair variant 3
-  patChair4:  [54, 54, 20, 26],     // chair variant 4
-  patBed3:    [86, 50, 36, 30],     // bed variant 3
-  patBed4:    [134, 50, 36, 30],    // bed variant 4
-  patIVs:     [16, 96, 160, 48],    // IV pole stands (all together)
-  patMons:    [16, 160, 80, 32],    // monitor bank
-  patPlant:   [112, 160, 16, 32],   // plant
-  patTrash:   [160, 160, 15, 32],   // trash can
-
-  // mp-radiology
-  radWin1:    [16, 21, 80, 59],     // observation window 1
-  radEquip1:  [112, 22, 48, 58],    // exam equipment cluster
-  radLight:   [176, 28, 48, 52],    // surgical light
-  radXray1:   [240, 12, 48, 68],    // x-ray screen + equipment
-  radWin2:    [16, 85, 80, 59],     // observation window 2
-  radEquip2:  [112, 86, 48, 58],    // more equipment
-  radLight2:  [176, 92, 48, 52],    // second light
-  radXray2:   [240, 83, 32, 59],    // x-ray screen 2
-  radBigArea: [16, 147, 256, 141],  // MRI + scrubs + hazard (large composite)
-
-  // mp-walls
-  walDoors:   [16, 16, 192, 96],    // all doors (2 rows of doors)
-  walDoorTop: [16, 16, 192, 48],    // top row doors only
-  walDoorBot: [16, 64, 192, 48],    // bottom row doors only
-  walTiles:   [96, 128, 144, 64],   // floor tiles + wall panel
-  walSmall:   [16, 133, 72, 59],    // small decorative items
-
-  // mp-office
-  ofcTop:     [17, 16, 238, 96],    // certificates, bookshelf, anatomy, plants
-  ofcBot:     [27, 113, 228, 31],   // desk + chairs
+  // Building facade sections (mp-exteriors)
+  extTop:     [16, 16, 256, 80],
+  extMid:     [16, 112, 256, 96],
+  extBot:     [16, 224, 256, 64],
+  extText:    [34, 295, 172, 18],
+  extAmb1:    [16, 324, 160, 60],
+  extAmb2:    [80, 388, 160, 60],
+  extBadge:   [192, 328, 32, 51],
+  // Sky (mp-background)
+  bgCloud:    [128, 0, 80, 32],
+  bgSun:      [208, 0, 32, 32],
+  bgCity:     [96, 48, 64, 32],
+  // Lobby furniture (mp-lobby)
+  lobChairs:  [22, 10, 36, 54],
+  lobVend:    [64, 16, 192, 48],
+  lobDesk:    [20, 74, 40, 86],
+  lobCounter: [64, 72, 48, 88],
+  lobPanels:  [128, 72, 128, 88],
+  // Patient room (mp-patient)
+  patBed1:    [86, 18, 36, 30],
+  patBed2:    [134, 18, 36, 30],
+  patBed3:    [86, 50, 36, 30],
+  patBed4:    [134, 50, 36, 30],
+  patChair1:  [22, 22, 20, 26],
+  patChair2:  [54, 22, 20, 26],
+  patIVs:     [16, 96, 160, 48],
+  patMons:    [16, 160, 80, 32],
+  patPlant:   [112, 160, 16, 32],
+  patTrash:   [160, 160, 15, 32],
+  // Radiology (mp-radiology)
+  radWin1:    [16, 21, 80, 59],
+  radEquip1:  [112, 22, 48, 58],
+  radLight:   [176, 28, 48, 52],
+  radXray1:   [240, 12, 48, 68],
+  radWin2:    [16, 85, 80, 59],
+  radEquip2:  [112, 86, 48, 58],
+  radLight2:  [176, 92, 48, 52],
+  radXray2:   [240, 83, 32, 59],
+  radBig:     [16, 147, 256, 141],
+  // Walls + floor tiles (mp-walls)
+  walPanel:   [96, 128, 144, 64],  // wall panel + floor tiles
+  walDoorRow: [16, 16, 192, 48],   // top row of doors
+  walDoor2:   [16, 64, 192, 48],   // bottom row of doors
+  // Office (mp-office)
+  ofcAll:     [17, 16, 238, 96],
+  ofcDesk:    [27, 113, 228, 31],
 }
 
-// Floor names for elevator
 const FLOOR_NAMES = ['ROOF', 'LOBBY', 'WARD', 'ICU', 'OR']
-
-// Tileset palette colors (sampled from actual sprites)
-const WALL_COLOR = '#c7cfdd'  // light concrete
-const WALL_DARK = '#92a1b9'   // darker concrete
-const FLOOR_COLOR = '#858585' // floor gray
-const FLOOR_DARK = '#5d5d5d'  // shadow gray
-const FLOOR_LIGHT = '#b4b4b4' // highlight gray
-const ACCENT_GREEN = '#5ac54f'
-const ACCENT_CYAN = '#00cdf9'
-const ACCENT_RED = '#c42430'
-const DARK_BG = '#1a1932'
 
 function loadSheets() {
   const s = {}
@@ -101,6 +77,25 @@ function loadSheets() {
   return s
 }
 
+// Draw sprite at correct aspect ratio. height = dh, width computed from source aspect ratio
+function drAR(ctx, sh, region, dx, dy, dh, flip) {
+  if (!sh?.ok) return
+  const [sx, sy, sw, sh2] = region
+  const dw = (sw / sh2) * dh
+  ctx.save()
+  ctx.imageSmoothingEnabled = false
+  if (flip) {
+    ctx.translate(dx + dw, dy)
+    ctx.scale(-1, 1)
+    ctx.drawImage(sh.img, sx, sy, sw, sh2, 0, 0, dw, dh)
+  } else {
+    ctx.drawImage(sh.img, sx, sy, sw, sh2, dx, dy, dw, dh)
+  }
+  ctx.restore()
+  return dw // return computed width
+}
+
+// Draw sprite at exact dest size (may stretch)
 function dr(ctx, sh, region, dx, dy, dw, dh, flip) {
   if (!sh?.ok) return
   const [sx, sy, sw, sh2] = region
@@ -116,7 +111,7 @@ function dr(ctx, sh, region, dx, dy, dw, dh, flip) {
   ctx.restore()
 }
 
-// Tile a sprite region horizontally
+// Tile a region horizontally
 function drTile(ctx, sh, region, x, y, totalW, dh) {
   if (!sh?.ok) return
   const [sx, sy, sw, sh2] = region
@@ -172,27 +167,30 @@ export default function HospitalScene({ depth = 0, floor = 0, maxDepth = 2500 })
 
       ctx.clearRect(0, 0, w, h)
 
+      // The consistent pixel scale: tileset is 256px wide, we render at ~70% of screen
+      const pxScale = (w * 0.7) / 256
+
       for (let i = 0; i <= 4; i++) {
         const scrY = i * h - camY
         if (scrY > h + 20 || scrY + h < -20) continue
-        drawFloor(ctx, i, scrY, w, h, t, sp)
+        drawFloor(ctx, i, scrY, w, h, t, sp, pxScale)
       }
 
-      // Structural beams between floors
+      // Structural beams
       const beamH = Math.max(12, h * 0.022)
       for (let i = 0; i < 4; i++) {
         const by = (i + 1) * h - camY
         if (by < -beamH || by > h + beamH) continue
-        ctx.fillStyle = FLOOR_DARK
+        ctx.fillStyle = '#5d5d5d'
         ctx.fillRect(0, by - beamH / 2, w, beamH)
-        ctx.fillStyle = FLOOR_COLOR
+        ctx.fillStyle = '#858585'
         ctx.fillRect(0, by - beamH / 2, w, 3)
-        ctx.fillStyle = DARK_BG
+        ctx.fillStyle = '#1a1932'
         ctx.fillRect(0, by + beamH / 2 - 2, w, 2)
       }
 
-      // Scanlines (very subtle)
-      ctx.fillStyle = 'rgba(0,0,0,0.015)'
+      // Very subtle scanlines
+      ctx.fillStyle = 'rgba(0,0,0,0.012)'
       for (let sy = 0; sy < h; sy += 4) ctx.fillRect(0, sy, w, 1)
 
       drawElevator(ctx, w, h, cam)
@@ -215,424 +213,441 @@ export default function HospitalScene({ depth = 0, floor = 0, maxDepth = 2500 })
 // FLOOR RENDERING
 // ═══════════════════════════════════════════════════
 
-function drawFloor(ctx, idx, y, w, h, t, sp) {
+function drawFloor(ctx, idx, y, w, h, t, sp, px) {
   switch (idx) {
-    case 0: drawExterior(ctx, y, w, h, t, sp); break
-    case 1: drawLobby(ctx, y, w, h, t, sp); break
-    case 2: drawWard(ctx, y, w, h, t, sp); break
-    case 3: drawICU(ctx, y, w, h, t, sp); break
-    case 4: drawOR(ctx, y, w, h, t, sp); break
+    case 0: drawExterior(ctx, y, w, h, t, sp, px); break
+    default: drawInterior(ctx, idx, y, w, h, t, sp, px); break
   }
 }
 
-// Draw a room interior using tileset palette + tiled floor
-function drawRoom(ctx, y, w, h, accentColor, sp) {
-  const wallW = w * 0.06
-
-  // Wall fill (tileset concrete color)
-  ctx.fillStyle = WALL_COLOR
+// Room background: tiled wall texture + tiled floor texture from tileset
+function drawRoomBG(ctx, y, w, h, sp) {
+  // Fill with tileset wall color as base
+  ctx.fillStyle = '#c7cfdd'
   ctx.fillRect(0, y, w, h)
 
-  // Side walls (darker concrete)
-  ctx.fillStyle = WALL_DARK
+  // Tile the wall panel texture across the whole room
+  if (sp?.wal?.ok) {
+    ctx.globalAlpha = 0.6
+    drTile(ctx, sp.wal, SP.walPanel, 0, y, w, h * 0.4)
+    ctx.globalAlpha = 0.4
+    drTile(ctx, sp.wal, SP.walPanel, 0, y + h * 0.4, w, h * 0.3)
+    ctx.globalAlpha = 1
+
+    // Floor tiles at bottom
+    drTile(ctx, sp.wal, SP.walPanel, 0, y + h * 0.82, w, h * 0.18)
+  }
+
+  // Floor line
+  ctx.fillStyle = '#5d5d5d'
+  ctx.fillRect(0, y + h * 0.82, w, 3)
+  ctx.fillStyle = '#b4b4b4'
+  ctx.fillRect(0, y + h * 0.82 - 1, w, 1)
+
+  // Side walls (darker)
+  const wallW = w * 0.05
+  ctx.fillStyle = '#92a1b9'
   ctx.fillRect(0, y, wallW, h)
   ctx.fillRect(w - wallW, y, wallW, h)
-
-  // Wall inner edge highlight
-  ctx.fillStyle = FLOOR_LIGHT
+  ctx.fillStyle = '#b4b4b4'
   ctx.fillRect(wallW, y, 2, h)
   ctx.fillRect(w - wallW - 2, y, 2, h)
-
-  // Floor area (bottom 12%)
-  const floorH = h * 0.12
-  ctx.fillStyle = FLOOR_COLOR
-  ctx.fillRect(wallW, y + h - floorH, w - wallW * 2, floorH)
-
-  // Tile floor texture from tileset
-  if (sp?.wal?.ok) {
-    ctx.globalAlpha = 0.35
-    drTile(ctx, sp.wal, SP.walTiles, wallW, y + h - floorH, w - wallW * 2, floorH)
-    ctx.globalAlpha = 1
-  }
-
-  // Floor edge line
-  ctx.fillStyle = FLOOR_DARK
-  ctx.fillRect(wallW, y + h - floorH, w - wallW * 2, 2)
-
-  // Accent stripe (like the green/teal stripe in the tileset promo)
-  if (accentColor) {
-    ctx.fillStyle = accentColor
-    ctx.fillRect(wallW, y + h * 0.28, w - wallW * 2, 4)
-  }
 }
-
-function sc(w) { return Math.min(4.5, Math.max(2.5, w / 400)) }
 
 // ── FLOOR 0: EXTERIOR ─────────────────────────────
-function drawExterior(ctx, y, w, h, t, sp) {
+function drawExterior(ctx, y, w, h, t, sp, px) {
   if (!sp) return
   const { ext, bg } = sp
-  const s = sc(w)
 
-  // Sky from tileset palette (#0098dc blue)
-  ctx.fillStyle = '#5bb9e8'
-  ctx.fillRect(0, y, w, h * 0.75)
+  // Sky from tileset blue
+  ctx.fillStyle = '#0098dc'
+  ctx.fillRect(0, y, w, h * 0.72)
+  // Sky gradient lighter at top
+  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.72)
+  skyG.addColorStop(0, 'rgba(90,185,232,0.6)')
+  skyG.addColorStop(1, 'rgba(0,152,220,0)')
+  ctx.fillStyle = skyG
+  ctx.fillRect(0, y, w, h * 0.72)
+
   // Ground
-  ctx.fillStyle = FLOOR_COLOR
-  ctx.fillRect(0, y + h * 0.75, w, h * 0.25)
+  ctx.fillStyle = '#858585'
+  ctx.fillRect(0, y + h * 0.72, w, h * 0.28)
+  // Sidewalk
+  ctx.fillStyle = '#b4b4b4'
+  ctx.fillRect(0, y + h * 0.72, w, h * 0.06)
 
-  // Clouds from tileset
+  // Clouds (correct aspect ratio)
   if (bg?.ok) {
-    const drift = (t * 0.01) % (w + 200)
-    ctx.globalAlpha = 0.7
-    dr(ctx, bg, SP.bgCloud, drift - 100, y + h * 0.06, s * 24, s * 10)
-    dr(ctx, bg, SP.bgCloud, drift + w * 0.4, y + h * 0.12, s * 18, s * 8)
-    dr(ctx, bg, SP.bgCloud, drift + w * 0.7, y + h * 0.04, s * 20, s * 9)
+    const drift = (t * 0.008) % (w * 1.5)
+    ctx.globalAlpha = 0.65
+    const cloudH = px * 12
+    drAR(ctx, bg, SP.bgCloud, drift - w * 0.3, y + h * 0.05, cloudH)
+    drAR(ctx, bg, SP.bgCloud, drift + w * 0.2, y + h * 0.14, cloudH * 0.75)
+    drAR(ctx, bg, SP.bgCloud, drift - w * 0.1 + w * 0.6, y + h * 0.08, cloudH * 0.6)
     ctx.globalAlpha = 1
 
-    // Sun
-    dr(ctx, bg, SP.bgSun, w * 0.82, y + h * 0.03, s * 10, s * 10)
+    // Sun (correct aspect ratio)
+    drAR(ctx, bg, SP.bgSun, w * 0.82, y + h * 0.03, px * 12)
 
-    // City silhouette
-    ctx.globalAlpha = 0.25
-    drTile(ctx, bg, SP.bgCity, 0, y + h * 0.42, w, s * 10)
+    // City silhouette (tiled across width)
+    ctx.globalAlpha = 0.2
+    drTile(ctx, bg, SP.bgCity, 0, y + h * 0.52, w, px * 12)
     ctx.globalAlpha = 1
   }
 
-  // Hospital building facade (centered, using all 3 bands)
+  // Hospital building - rendered at CORRECT aspect ratio
   if (ext?.ok) {
-    const bw = Math.min(w * 0.78, 256 * s * 0.85)
+    // Building width = 256 * pxScale, centered
+    const bw = 256 * px * 0.9
     const bx = (w - bw) / 2
-    const bandH = h * 0.15
 
-    // 3 facade sections stacked
-    dr(ctx, ext, SP.extTop, bx, y + h * 0.28, bw, bandH)
-    dr(ctx, ext, SP.extMid, bx, y + h * 0.28 + bandH, bw, bandH * 1.2)
-    dr(ctx, ext, SP.extBot, bx, y + h * 0.28 + bandH * 2.2, bw, bandH * 0.8)
+    // Stack 3 facade sections at correct proportions
+    const topH = 80 * px * 0.9
+    const midH = 96 * px * 0.9
+    const botH = 64 * px * 0.9
+    const totalH = topH + midH + botH
+    const by = y + h * 0.72 - totalH - h * 0.04 // building sits on ground
 
-    // "HOSPITAL" text
-    const tw = bw * 0.5, th = tw * (18 / 172)
-    dr(ctx, ext, SP.extText, w / 2 - tw / 2, y + h * 0.24, tw, th)
+    // Building shadow
+    ctx.fillStyle = 'rgba(26,25,50,0.15)'
+    ctx.fillRect(bx + 8, by + 8, bw, totalH)
 
-    // Ambulance
-    const aw = s * 48, ah = aw * (60 / 160)
-    dr(ctx, ext, SP.extAmb1, w * 0.08, y + h * 0.78, aw, ah)
-    dr(ctx, ext, SP.extAmb2, w * 0.62, y + h * 0.8, aw * 0.85, ah * 0.85)
+    // 3 facade bands at correct aspect ratios
+    dr(ctx, ext, SP.extTop, bx, by, bw, topH)
+    dr(ctx, ext, SP.extMid, bx, by + topH, bw, midH)
+    dr(ctx, ext, SP.extBot, bx, by + topH + midH, bw, botH)
 
-    // Star of life badge
-    dr(ctx, ext, SP.extBadge, w * 0.88, y + h * 0.72, s * 10, s * 16)
+    // Window glow overlay
+    for (let r = 0; r < 3; r++) {
+      for (let c = 0; c < 5; c++) {
+        if (Math.sin(t * 0.0008 + r * 2.3 + c * 1.7) < -0.3) continue
+        const fl = 0.3 + 0.2 * Math.sin(t * 0.002 + r + c * 3)
+        ctx.globalAlpha = fl * 0.08
+        ctx.fillStyle = '#ffb84d'
+        const ww = bw * 0.06, wh = topH * 0.35
+        ctx.fillRect(bx + bw * 0.08 + c * bw * 0.18, by + r * (totalH / 3) + (totalH / 3 - wh) / 2, ww, wh)
+      }
+    }
+    ctx.globalAlpha = 1
+
+    // "HOSPITAL" text (correct aspect ratio)
+    const textH = px * 8
+    const textW = drAR(ctx, ext, SP.extText, 0, 0, 0) // just get width
+    drAR(ctx, ext, SP.extText, w / 2 - (172 / 18 * textH) / 2, by - textH - px * 4, textH)
+
+    // Ambulances at correct aspect ratio
+    const ambH = px * 22
+    drAR(ctx, ext, SP.extAmb1, w * 0.05, y + h * 0.72 + h * 0.02, ambH)
+    drAR(ctx, ext, SP.extAmb2, w * 0.6, y + h * 0.72 + h * 0.03, ambH * 0.85)
+
+    // Ambulance flashing light
+    if (Math.sin(t * 0.008) > 0) {
+      ctx.globalAlpha = 0.5
+      ctx.fillStyle = '#c42430'
+      ctx.beginPath()
+      ctx.arc(w * 0.05 + ambH * 0.3, y + h * 0.72 + h * 0.02 - 3, 4, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.globalAlpha = 1
+    }
   }
 
-  // Road markings
+  // Road markings on ground
   ctx.fillStyle = '#FFD54F'
-  for (let x = ((t * 0.02) % 56) - 28; x < w; x += 56) {
-    ctx.fillRect(x, y + h * 0.88, 18, 3)
+  for (let x = ((t * 0.015) % 60) - 30; x < w; x += 60) {
+    ctx.fillRect(x, y + h * 0.88, 20, 3)
   }
 }
 
-// ── FLOOR 1: LOBBY ────────────────────────────────
-function drawLobby(ctx, y, w, h, t, sp) {
-  drawRoom(ctx, y, w, h, '#e07438', sp) // orange accent like tileset
+// ── FLOORS 1-4: INTERIOR ROOMS ────────────────────
+function drawInterior(ctx, idx, y, w, h, t, sp, px) {
+  drawRoomBG(ctx, y, w, h, sp)
   if (!sp) return
-  const { lob, wal } = sp
-  const s = sc(w)
-  const ww = w * 0.06
-  const iW = w - ww * 2
 
-  // Doors on walls (from tileset)
+  const wallW = w * 0.05
+  const iL = wallW + 10
+  const iR = w - wallW - 10
+  const iW = iR - iL
+
+  switch (idx) {
+    case 1: drawLobby(ctx, y, w, h, t, sp, px, iL, iR, iW); break
+    case 2: drawWard(ctx, y, w, h, t, sp, px, iL, iR, iW); break
+    case 3: drawICU(ctx, y, w, h, t, sp, px, iL, iR, iW); break
+    case 4: drawOR(ctx, y, w, h, t, sp, px, iL, iR, iW); break
+  }
+
+  // Floor name watermark
+  ctx.globalAlpha = 0.06
+  ctx.font = `bold ${Math.max(36, h * 0.055) | 0}px monospace`
+  ctx.fillStyle = '#1a1932'
+  ctx.textAlign = 'left'
+  ctx.fillText(FLOOR_NAMES[idx], iL, y + h * 0.95)
+  ctx.globalAlpha = 1
+}
+
+// ── LOBBY ─────────────────────────────────────────
+function drawLobby(ctx, y, w, h, t, sp, px, iL, iR, iW) {
+  const { lob, wal } = sp
+
+  // Orange accent stripe (from tileset palette #e07438)
+  ctx.fillStyle = '#e07438'
+  ctx.fillRect(iL - 10, y + h * 0.3, iW + 20, 4)
+
+  // Doors on walls (correct aspect ratio)
   if (wal?.ok) {
-    // Top row doors on walls
-    const dh = s * 20
-    const dw = dh * (192 / 48)
-    // Single door on left wall
-    dr(ctx, wal, [16, 16, 32, 48], ww + 5, y + h * 0.08, s * 12, s * 18)
-    // Single door on right wall
-    dr(ctx, wal, [80, 16, 32, 48], w - ww - s * 12 - 5, y + h * 0.08, s * 12, s * 18)
+    const doorH = px * 20
+    drAR(ctx, wal, [16, 16, 32, 48], iL, y + h * 0.06, doorH)
+    drAR(ctx, wal, [80, 16, 32, 48], iR - px * 14, y + h * 0.06, doorH, true)
   }
 
   if (lob?.ok) {
-    // Vending machines row (top of room, against wall)
-    const vendW = iW * 0.65, vendH = vendW * (48 / 192)
-    dr(ctx, lob, SP.lobVend, ww + iW * 0.02, y + h * 0.08, vendW, vendH)
+    // Vending machines row (top, full width, correct AR)
+    const vendH = h * 0.18
+    drAR(ctx, lob, SP.lobVend, iL + iW * 0.15, y + h * 0.06, vendH)
 
-    // Waiting chairs (left side)
-    const chW = s * 14, chH = chW * (54 / 36)
-    dr(ctx, lob, SP.lobChairs, ww + iW * 0.03, y + h * 0.42, chW, chH)
-    dr(ctx, lob, SP.lobChairs, ww + iW * 0.12, y + h * 0.42, chW, chH)
+    // Waiting chairs left
+    const chairH = h * 0.2
+    drAR(ctx, lob, SP.lobChairs, iL + iW * 0.02, y + h * 0.42, chairH)
+    drAR(ctx, lob, SP.lobChairs, iL + iW * 0.12, y + h * 0.42, chairH)
 
-    // Reception desk piece
-    const deskW = s * 16, deskH = deskW * (86 / 40)
-    dr(ctx, lob, SP.lobDesk, ww + iW * 0.35, y + h * 0.35, deskW, deskH)
+    // Reception counter (center area)
+    const cntH = h * 0.3
+    drAR(ctx, lob, SP.lobCounter, iL + iW * 0.35, y + h * 0.35, cntH)
+    drAR(ctx, lob, SP.lobDesk, iL + iW * 0.28, y + h * 0.33, cntH)
 
-    // Counter
-    const cntW = s * 18, cntH = cntW * (88 / 48)
-    dr(ctx, lob, SP.lobCounter, ww + iW * 0.45, y + h * 0.33, cntW, cntH)
+    // Right side panels (monitors + displays)
+    const panH = h * 0.3
+    drAR(ctx, lob, SP.lobPanels, iL + iW * 0.55, y + h * 0.35, panH)
 
-    // Right panels (monitors + displays)
-    const panW = iW * 0.42, panH = panW * (88 / 128)
-    dr(ctx, lob, SP.lobPanels, ww + iW * 0.55, y + h * 0.33, panW, panH)
-
-    // More chairs on right
-    dr(ctx, lob, SP.lobChairs, w - ww - iW * 0.15, y + h * 0.56, chW, chH)
-    dr(ctx, lob, SP.lobChairs, w - ww - iW * 0.06, y + h * 0.56, chW, chH)
+    // More chairs right
+    drAR(ctx, lob, SP.lobChairs, iR - iW * 0.14, y + h * 0.56, chairH * 0.8, true)
   }
 }
 
-// ── FLOOR 2: WARD ─────────────────────────────────
-function drawWard(ctx, y, w, h, t, sp) {
-  drawRoom(ctx, y, w, h, ACCENT_GREEN, sp) // green accent
-  if (!sp) return
+// ── WARD ──────────────────────────────────────────
+function drawWard(ctx, y, w, h, t, sp, px, iL, iR, iW) {
   const { pat, wal, ofc } = sp
-  const s = sc(w)
-  const ww = w * 0.06
-  const iW = w - ww * 2
+
+  // Green accent stripe
+  ctx.fillStyle = '#5ac54f'
+  ctx.fillRect(iL - 10, y + h * 0.28, iW + 20, 4)
 
   // Doors
   if (wal?.ok) {
-    dr(ctx, wal, [16, 16, 32, 48], ww + 5, y + h * 0.06, s * 12, s * 18)
-    dr(ctx, wal, [48, 16, 32, 48], ww + iW * 0.25, y + h * 0.06, s * 12, s * 18)
-    dr(ctx, wal, [80, 16, 32, 48], w - ww - s * 12 - 5, y + h * 0.06, s * 12, s * 18)
-    dr(ctx, wal, [16, 64, 32, 48], w - ww - iW * 0.25 - s * 12, y + h * 0.06, s * 12, s * 18)
+    const doorH = px * 18
+    drAR(ctx, wal, [16, 64, 32, 48], iL, y + h * 0.05, doorH)
+    drAR(ctx, wal, [48, 64, 32, 48], iL + iW * 0.22, y + h * 0.05, doorH)
+    drAR(ctx, wal, [80, 64, 32, 48], iR - px * 12, y + h * 0.05, doorH, true)
+    drAR(ctx, wal, [16, 16, 32, 48], iR - iW * 0.22 - px * 12, y + h * 0.05, doorH, true)
   }
 
   // Office decorations on wall
   if (ofc?.ok) {
-    const decW = iW * 0.45, decH = decW * (96 / 238)
-    dr(ctx, ofc, SP.ofcTop, ww + iW * 0.28, y + h * 0.03, decW, decH)
+    const decH = h * 0.14
+    drAR(ctx, ofc, SP.ofcAll, iL + iW * 0.25, y + h * 0.03, decH)
   }
 
   if (pat?.ok) {
-    // Beds - LEFT side (2 beds stacked)
-    const bedW = s * 14, bedH = bedW * (30 / 36)
-    dr(ctx, pat, SP.patBed1, ww + iW * 0.03, y + h * 0.38, bedW, bedH)
-    dr(ctx, pat, SP.patBed3, ww + iW * 0.03, y + h * 0.55, bedW, bedH)
+    const bedH = px * 14
 
-    // Beds - RIGHT side (2 beds stacked, flipped)
-    dr(ctx, pat, SP.patBed2, w - ww - iW * 0.03 - bedW, y + h * 0.38, bedW, bedH, true)
-    dr(ctx, pat, SP.patBed4, w - ww - iW * 0.03 - bedW, y + h * 0.55, bedW, bedH, true)
+    // Left beds (2 stacked)
+    drAR(ctx, pat, SP.patBed1, iL + iW * 0.02, y + h * 0.38, bedH)
+    drAR(ctx, pat, SP.patBed3, iL + iW * 0.02, y + h * 0.56, bedH)
 
-    // IV poles (the whole row, centered)
-    const ivW = iW * 0.5, ivH = ivW * (48 / 160)
-    dr(ctx, pat, SP.patIVs, ww + iW * 0.25, y + h * 0.35, ivW, ivH)
+    // Right beds (2 stacked, flipped)
+    const bw = drAR(ctx, pat, SP.patBed2, 0, 0, 0) || px * 17
+    drAR(ctx, pat, SP.patBed2, iR - iW * 0.02 - bw, y + h * 0.38, bedH, true)
+    drAR(ctx, pat, SP.patBed4, iR - iW * 0.02 - bw, y + h * 0.56, bedH, true)
 
-    // Monitor bank (center)
-    const monW = iW * 0.3, monH = monW * (32 / 80)
-    dr(ctx, pat, SP.patMons, ww + iW * 0.35, y + h * 0.6, monW, monH)
+    // IV poles (center, full bank)
+    const ivH = h * 0.16
+    drAR(ctx, pat, SP.patIVs, iL + iW * 0.25, y + h * 0.33, ivH)
+
+    // Monitors (center)
+    const monH = h * 0.1
+    const monW = drAR(ctx, pat, SP.patMons, w / 2 - iW * 0.15, y + h * 0.58, monH)
 
     // EKG squiggle on monitors
-    ctx.strokeStyle = `rgba(90,197,79,0.6)`
-    ctx.lineWidth = 1.5
-    ctx.beginPath()
-    const monLeft = ww + iW * 0.35 + 4
-    const monMid = y + h * 0.6 + monH / 2
-    for (let px = 0; px < monW - 8; px += 2) {
-      const phase = ((px + t * 0.05) % 20)
-      let dy = phase > 8 && phase < 10 ? -4 : phase > 10 && phase < 12 ? 6 : phase > 12 && phase < 14 ? -2 : Math.sin(px * 0.5) * 0.8
-      if (px === 0) ctx.moveTo(monLeft + px, monMid + dy)
-      else ctx.lineTo(monLeft + px, monMid + dy)
+    if (monW) {
+      ctx.strokeStyle = 'rgba(90,197,79,0.6)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      const mx0 = w / 2 - iW * 0.15 + 4
+      const my0 = y + h * 0.58 + monH / 2
+      for (let p = 0; p < (monW || 60) - 8; p += 2) {
+        const ph = ((p + t * 0.05) % 20)
+        let dy = ph > 8 && ph < 10 ? -4 : ph > 10 && ph < 12 ? 6 : ph > 12 && ph < 14 ? -2 : Math.sin(p * 0.5) * 0.8
+        if (p === 0) ctx.moveTo(mx0 + p, my0 + dy); else ctx.lineTo(mx0 + p, my0 + dy)
+      }
+      ctx.stroke()
     }
-    ctx.stroke()
 
-    // Chairs along bottom
-    const chW = s * 8, chH = chW * (26 / 20)
-    dr(ctx, pat, SP.patChair1, ww + iW * 0.15, y + h * 0.72, chW, chH)
-    dr(ctx, pat, SP.patChair2, ww + iW * 0.22, y + h * 0.72, chW, chH)
-    dr(ctx, pat, SP.patChair3, w - ww - iW * 0.22, y + h * 0.72, chW, chH)
-    dr(ctx, pat, SP.patChair4, w - ww - iW * 0.15, y + h * 0.72, chW, chH)
+    // Chairs
+    drAR(ctx, pat, SP.patChair1, iL + iW * 0.4, y + h * 0.72, px * 10)
+    drAR(ctx, pat, SP.patChair2, iL + iW * 0.48, y + h * 0.72, px * 10)
 
     // Plant + trash
-    const smS = s * 6
-    dr(ctx, pat, SP.patPlant, ww + iW * 0.5, y + h * 0.7, smS, smS * 2)
-    dr(ctx, pat, SP.patTrash, w - ww - iW * 0.1, y + h * 0.72, smS, smS * 2)
+    drAR(ctx, pat, SP.patPlant, iL + iW * 0.6, y + h * 0.68, px * 12)
+    drAR(ctx, pat, SP.patTrash, iR - iW * 0.08, y + h * 0.68, px * 12)
   }
 }
 
-// ── FLOOR 3: ICU ──────────────────────────────────
-function drawICU(ctx, y, w, h, t, sp) {
-  drawRoom(ctx, y, w, h, ACCENT_CYAN, sp) // cyan accent
-  if (!sp) return
+// ── ICU ───────────────────────────────────────────
+function drawICU(ctx, y, w, h, t, sp, px, iL, iR, iW) {
   const { rad, pat, wal } = sp
-  const s = sc(w)
-  const ww = w * 0.06
-  const iW = w - ww * 2
 
-  // Double door
+  // Cyan accent
+  ctx.fillStyle = '#00cdf9'
+  ctx.fillRect(iL - 10, y + h * 0.26, iW + 20, 4)
+
+  // Doors
   if (wal?.ok) {
-    dr(ctx, wal, [112, 16, 48, 48], ww + 5, y + h * 0.06, s * 18, s * 18)
-    dr(ctx, wal, [112, 64, 48, 48], w - ww - s * 18 - 5, y + h * 0.06, s * 18, s * 18)
+    const doorH = px * 20
+    drAR(ctx, wal, [112, 16, 48, 48], iL, y + h * 0.04, doorH)
+    drAR(ctx, wal, [112, 64, 48, 48], iR - px * 20, y + h * 0.04, doorH)
   }
 
   if (rad?.ok) {
-    // Observation windows on upper walls
-    const winW = s * 28, winH = winW * (59 / 80)
-    dr(ctx, rad, SP.radWin1, ww + iW * 0.02, y + h * 0.04, winW, winH)
-    dr(ctx, rad, SP.radWin2, w - ww - iW * 0.02 - winW, y + h * 0.05, winW, winH)
+    // Observation windows (correct AR)
+    const winH = px * 22
+    drAR(ctx, rad, SP.radWin1, iL + iW * 0.15, y + h * 0.03, winH)
+    drAR(ctx, rad, SP.radWin2, iR - iW * 0.15 - px * 30, y + h * 0.04, winH)
 
     // Surgical lights
-    const ltW = s * 16, ltH = ltW * (52 / 48)
-    dr(ctx, rad, SP.radLight, ww + iW * 0.22, y + h * 0.03, ltW, ltH)
-    dr(ctx, rad, SP.radLight2, w - ww - iW * 0.22 - ltW, y + h * 0.04, ltW, ltH)
-
-    // Equipment clusters
-    const eqW = s * 16, eqH = eqW * (58 / 48)
-    dr(ctx, rad, SP.radEquip1, ww + iW * 0.12, y + h * 0.42, eqW, eqH)
-    dr(ctx, rad, SP.radEquip2, w - ww - iW * 0.12 - eqW, y + h * 0.42, eqW, eqH, true)
+    const ltH = px * 20
+    drAR(ctx, rad, SP.radLight, iL + iW * 0.08, y + h * 0.01, ltH)
+    drAR(ctx, rad, SP.radLight2, iR - iW * 0.08 - px * 18, y + h * 0.02, ltH)
 
     // X-ray screens
-    const xrW = s * 16, xrH = xrW * (68 / 48)
-    dr(ctx, rad, SP.radXray1, ww + iW * 0.35, y + h * 0.04, xrW, xrH)
-    dr(ctx, rad, SP.radXray2, w - ww - iW * 0.35 - s * 10, y + h * 0.08, s * 10, s * 18)
+    const xrH = px * 24
+    drAR(ctx, rad, SP.radXray1, iL + iW * 0.35, y + h * 0.02, xrH)
+    drAR(ctx, rad, SP.radXray2, iR - iW * 0.35 - px * 10, y + h * 0.04, xrH * 0.8)
 
-    // X-ray screen glow
-    ctx.globalAlpha = 0.08 + 0.05 * Math.sin(t * 0.003)
-    ctx.fillStyle = ACCENT_CYAN
-    ctx.fillRect(ww + iW * 0.35 + 3, y + h * 0.04 + 3, xrW - 6, xrH - 6)
+    // X-ray glow
+    ctx.globalAlpha = 0.06 + 0.04 * Math.sin(t * 0.003)
+    ctx.fillStyle = '#00cdf9'
+    const xrW = (48 / 68) * xrH
+    ctx.fillRect(iL + iW * 0.35 + 2, y + h * 0.02 + 2, xrW - 4, xrH - 4)
     ctx.globalAlpha = 1
 
-    // BIG MRI + scrubs + hazard area (the large composite)
-    const bigW = iW * 0.7, bigH = bigW * (141 / 256)
-    dr(ctx, rad, SP.radBigArea, ww + iW * 0.15, y + h * 0.42, bigW, bigH)
+    // Equipment clusters
+    const eqH = px * 22
+    drAR(ctx, rad, SP.radEquip1, iL + iW * 0.08, y + h * 0.42, eqH)
+    drAR(ctx, rad, SP.radEquip2, iR - iW * 0.08 - px * 18, y + h * 0.42, eqH, true)
 
-    // MRI glow ring animation
-    const rp = (t * 0.003) % (Math.PI * 2)
-    const mriCx = ww + iW * 0.15 + bigW * 0.19 // MRI is left side of big area
-    const mriCy = y + h * 0.42 + bigH * 0.7
-    ctx.strokeStyle = `rgba(0,205,249,${0.08 + 0.08 * Math.sin(rp)})`
-    ctx.lineWidth = 3
-    ctx.beginPath()
-    ctx.ellipse(mriCx, mriCy, bigW * 0.12, bigH * 0.15, 0, 0, Math.PI * 2)
-    ctx.stroke()
+    // BIG area (MRI + scrubs + hazard - the large composite from radiology sheet)
+    const bigH = h * 0.38
+    drAR(ctx, rad, SP.radBig, iL + iW * 0.1, y + h * 0.42, bigH)
   }
 
-  // Patient monitors from patient sheet
+  // Patient monitors
   if (pat?.ok) {
-    const monW = iW * 0.22, monH = monW * (32 / 80)
-    dr(ctx, pat, SP.patMons, ww + iW * 0.03, y + h * 0.35, monW, monH)
-    dr(ctx, pat, SP.patMons, w - ww - iW * 0.03 - monW, y + h * 0.37, monW, monH)
+    const monH = h * 0.08
+    drAR(ctx, pat, SP.patMons, iL + iW * 0.02, y + h * 0.33, monH)
+    drAR(ctx, pat, SP.patMons, iR - iW * 0.02 - px * 20, y + h * 0.35, monH)
   }
 
-  // Blinking status lights
-  const lights = [
-    { x: 0.15, c: ACCENT_GREEN }, { x: 0.35, c: ACCENT_RED },
-    { x: 0.55, c: ACCENT_CYAN }, { x: 0.75, c: ACCENT_GREEN }, { x: 0.9, c: ACCENT_RED },
-  ]
-  for (let li = 0; li < lights.length; li++) {
-    const l = lights[li]
-    const on = Math.sin(t * 0.005 + li * 2.3) > 0.3
-    ctx.globalAlpha = on ? 0.6 : 0.08
-    ctx.fillStyle = l.c
+  // Status lights
+  const lights = [[0.15, '#5ac54f'], [0.35, '#c42430'], [0.55, '#00cdf9'], [0.75, '#5ac54f'], [0.9, '#c42430']]
+  for (let i = 0; i < lights.length; i++) {
+    const on = Math.sin(t * 0.005 + i * 2.3) > 0.3
+    ctx.globalAlpha = on ? 0.55 : 0.08
+    ctx.fillStyle = lights[i][1]
     ctx.beginPath()
-    ctx.arc(ww + iW * l.x, y + h * 0.03, 4, 0, Math.PI * 2)
+    ctx.arc(iL + iW * lights[i][0], y + h * 0.03, 4, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.globalAlpha = 1
 }
 
-// ── FLOOR 4: OR ───────────────────────────────────
-function drawOR(ctx, y, w, h, t, sp) {
-  drawRoom(ctx, y, w, h, ACCENT_RED, sp) // red accent for OR
-  if (!sp) return
+// ── OR ────────────────────────────────────────────
+function drawOR(ctx, y, w, h, t, sp, px, iL, iR, iW) {
   const { rad, pat, wal, ofc } = sp
-  const s = sc(w)
-  const ww = w * 0.06
-  const iW = w - ww * 2
+
+  // Red accent
+  ctx.fillStyle = '#c42430'
+  ctx.fillRect(iL - 10, y + h * 0.24, iW + 20, 4)
 
   // Red doors
   if (wal?.ok) {
-    dr(ctx, wal, [16, 16, 32, 48], ww + 5, y + h * 0.06, s * 12, s * 18)
-    dr(ctx, wal, [16, 16, 32, 48], w - ww - s * 12 - 5, y + h * 0.06, s * 12, s * 18, true)
+    const doorH = px * 20
+    drAR(ctx, wal, [16, 16, 32, 48], iL, y + h * 0.04, doorH)
+    drAR(ctx, wal, [16, 16, 32, 48], iR - px * 14, y + h * 0.04, doorH, true)
   }
 
-  // Dramatic spotlight from above
+  // Spotlight
   const lp = 0.85 + 0.15 * Math.sin(t * 0.002)
   const sg = ctx.createRadialGradient(w / 2, y + h * 0.1, 0, w / 2, y + h * 0.5, h * 0.4)
-  sg.addColorStop(0, `rgba(255,255,245,${0.12 * lp})`)
+  sg.addColorStop(0, `rgba(255,255,245,${0.1 * lp})`)
   sg.addColorStop(1, 'rgba(255,255,245,0)')
   ctx.fillStyle = sg
-  ctx.fillRect(ww, y, iW, h)
+  ctx.fillRect(iL, y, iW, h)
 
   if (rad?.ok) {
-    // Surgical lights (prominent)
-    const ltW = s * 18, ltH = ltW * (52 / 48)
-    dr(ctx, rad, SP.radLight, w * 0.32 - ltW / 2, y + h * 0.01, ltW, ltH)
-    dr(ctx, rad, SP.radLight2, w * 0.62 - ltW / 2, y + h * 0.02, ltW, ltH)
+    // Surgical lights (big)
+    const ltH = px * 24
+    drAR(ctx, rad, SP.radLight, w * 0.3 - px * 12, y - h * 0.01, ltH)
+    drAR(ctx, rad, SP.radLight2, w * 0.6 - px * 12, y, ltH)
 
     // Windows
-    const winW = s * 24, winH = winW * (59 / 80)
-    dr(ctx, rad, SP.radWin1, ww + iW * 0.35, y + h * 0.03, winW, winH)
+    const winH = px * 18
+    drAR(ctx, rad, SP.radWin1, iL + iW * 0.32, y + h * 0.02, winH)
 
     // X-ray screens flanking
-    const xrW = s * 14, xrH = xrW * (68 / 48)
-    dr(ctx, rad, SP.radXray1, ww + 10, y + h * 0.08, xrW, xrH)
-    dr(ctx, rad, SP.radXray2, w - ww - s * 10 - 10, y + h * 0.1, s * 10, s * 18)
+    const xrH = px * 20
+    drAR(ctx, rad, SP.radXray1, iL + 5, y + h * 0.06, xrH)
+    drAR(ctx, rad, SP.radXray2, iR - px * 10 - 5, y + h * 0.08, xrH * 0.75)
 
-    // Equipment clusters (operating area)
-    const eqW = s * 18, eqH = eqW * (58 / 48)
-    dr(ctx, rad, SP.radEquip1, ww + iW * 0.12, y + h * 0.4, eqW, eqH)
-    dr(ctx, rad, SP.radEquip2, w - ww - iW * 0.12 - eqW, y + h * 0.4, eqW, eqH, true)
+    // Equipment
+    const eqH = px * 22
+    drAR(ctx, rad, SP.radEquip1, iL + iW * 0.1, y + h * 0.38, eqH)
+    drAR(ctx, rad, SP.radEquip2, iR - iW * 0.1 - px * 18, y + h * 0.38, eqH, true)
 
-    // Central equipment (MRI/surgical area from big composite)
-    const bigW = iW * 0.55, bigH = bigW * (141 / 256)
-    dr(ctx, rad, SP.radBigArea, ww + iW * 0.22, y + h * 0.45, bigW, bigH)
+    // Big area (MRI etc)
+    const bigH = h * 0.32
+    drAR(ctx, rad, SP.radBig, iL + iW * 0.15, y + h * 0.46, bigH)
   }
 
-  // Monitors
   if (pat?.ok) {
-    const monW = iW * 0.2, monH = monW * (32 / 80)
-    dr(ctx, pat, SP.patMons, ww + 10, y + h * 0.38, monW, monH)
-    dr(ctx, pat, SP.patMons, w - ww - monW - 10, y + h * 0.4, monW, monH)
-
-    // IV poles
-    const ivW = iW * 0.3, ivH = ivW * (48 / 160)
-    dr(ctx, pat, SP.patIVs, ww + iW * 0.35, y + h * 0.35, ivW, ivH)
+    drAR(ctx, pat, SP.patMons, iL + 5, y + h * 0.4, h * 0.08)
+    drAR(ctx, pat, SP.patMons, iR - px * 20 - 5, y + h * 0.42, h * 0.08)
+    drAR(ctx, pat, SP.patIVs, iL + iW * 0.3, y + h * 0.33, h * 0.14)
   }
 
-  // Office desk
   if (ofc?.ok) {
-    const dW = iW * 0.35, dH = dW * (31 / 228)
-    dr(ctx, ofc, SP.ofcBot, ww + iW * 0.32, y + h * 0.72, dW, dH)
+    drAR(ctx, ofc, SP.ofcDesk, iL + iW * 0.3, y + h * 0.72, h * 0.08)
   }
 
-  // EKG line
-  ctx.strokeStyle = `rgba(90,197,79,0.3)`
+  // EKG
+  ctx.strokeStyle = 'rgba(90,197,79,0.25)'
   ctx.lineWidth = 2
   ctx.beginPath()
   const ekgY = y + h * 0.78
   for (let x = 0; x < w; x += 2) {
-    const phase = (x + t * 0.08) % 160
-    let dy = phase > 55 && phase < 60 ? -15 : phase > 60 && phase < 65 ? 20 : phase > 65 && phase < 70 ? -8 : Math.sin((x + t * 0.08) * 0.015) * 1.5
+    const ph = (x + t * 0.08) % 160
+    let dy = ph > 55 && ph < 60 ? -15 : ph > 60 && ph < 65 ? 20 : ph > 65 && ph < 70 ? -8 : Math.sin((x + t * 0.08) * 0.015) * 1.5
     if (x === 0) ctx.moveTo(x, ekgY + dy); else ctx.lineTo(x, ekgY + dy)
   }
   ctx.stroke()
 
   // Status lights
-  const lights = [
-    { x: 0.1, c: ACCENT_GREEN }, { x: 0.3, c: ACCENT_RED },
-    { x: 0.5, c: ACCENT_CYAN }, { x: 0.7, c: ACCENT_GREEN }, { x: 0.9, c: ACCENT_RED },
-  ]
-  for (let li = 0; li < lights.length; li++) {
-    const on = Math.sin(t * 0.005 + li * 1.8) > 0.2
+  const lights = [[0.1, '#5ac54f'], [0.3, '#c42430'], [0.5, '#00cdf9'], [0.7, '#5ac54f'], [0.9, '#c42430']]
+  for (let i = 0; i < lights.length; i++) {
+    const on = Math.sin(t * 0.005 + i * 1.8) > 0.2
     ctx.globalAlpha = on ? 0.5 : 0.06
-    ctx.fillStyle = lights[li].c
+    ctx.fillStyle = lights[i][1]
     ctx.beginPath()
-    ctx.arc(ww + iW * lights[li].x, y + h * 0.03, 3.5, 0, Math.PI * 2)
+    ctx.arc(iL + iW * lights[i][0], y + h * 0.03, 3.5, 0, Math.PI * 2)
     ctx.fill()
   }
   ctx.globalAlpha = 1
 }
 
-// ── ELEVATOR INDICATOR ────────────────────────────
+// ── ELEVATOR ──────────────────────────────────────
 function drawElevator(ctx, w, h, cam) {
-  const sx = w - 36
-  const top = h * 0.18, bot = h * 0.82
-  const span = bot - top
-
+  const sx = w - 36, top = h * 0.18, bot = h * 0.82, span = bot - top
   ctx.strokeStyle = 'rgba(0,0,0,0.08)'
   ctx.lineWidth = 2
-  ctx.beginPath()
-  ctx.moveTo(sx, top)
-  ctx.lineTo(sx, bot)
-  ctx.stroke()
+  ctx.beginPath(); ctx.moveTo(sx, top); ctx.lineTo(sx, bot); ctx.stroke()
 
   const fs = Math.max(8, Math.min(13, w * 0.012)) | 0
   ctx.font = `600 ${fs}px system-ui, sans-serif`
@@ -642,22 +657,17 @@ function drawElevator(ctx, w, h, cam) {
     const fy = top + (i / 4) * span
     const active = Math.abs(cam - i) < 0.3
     ctx.globalAlpha = active ? 0.8 : 0.18
-    ctx.fillStyle = active ? ACCENT_GREEN : WALL_DARK
+    ctx.fillStyle = active ? '#5ac54f' : '#92a1b9'
     ctx.fillRect(sx - 5, fy - 1, 10, 2)
     ctx.fillText(FLOOR_NAMES[i], sx - 12, fy + fs * 0.35)
-    ctx.beginPath()
-    ctx.arc(sx, fy, active ? 4.5 : 2, 0, Math.PI * 2)
-    ctx.fill()
+    ctx.beginPath(); ctx.arc(sx, fy, active ? 4.5 : 2, 0, Math.PI * 2); ctx.fill()
   }
 
   const curY = top + (Math.min(cam, 4) / 4) * span
   ctx.globalAlpha = 0.6
-  ctx.fillStyle = ACCENT_GREEN
+  ctx.fillStyle = '#5ac54f'
   ctx.beginPath()
-  ctx.moveTo(sx + 10, curY)
-  ctx.lineTo(sx + 4, curY - 5)
-  ctx.lineTo(sx + 4, curY + 5)
-  ctx.closePath()
-  ctx.fill()
+  ctx.moveTo(sx + 10, curY); ctx.lineTo(sx + 4, curY - 5); ctx.lineTo(sx + 4, curY + 5)
+  ctx.closePath(); ctx.fill()
   ctx.globalAlpha = 1
 }
