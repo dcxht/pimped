@@ -116,6 +116,22 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     ctx.globalAlpha = alpha
     ctx.drawImage(img, dx, dy, dw, dh)
 
+    // Top gradient overlay (dark → transparent) so logo text is readable
+    const topGrad = ctx.createLinearGradient(0, 0, 0, h * 0.25)
+    topGrad.addColorStop(0, 'rgba(6, 12, 24, 0.75)')
+    topGrad.addColorStop(0.6, 'rgba(6, 12, 24, 0.3)')
+    topGrad.addColorStop(1, 'rgba(6, 12, 24, 0)')
+    ctx.fillStyle = topGrad
+    ctx.fillRect(0, 0, w, h * 0.25)
+
+    // Bottom gradient overlay (transparent → dark) so button text is readable
+    const botGrad = ctx.createLinearGradient(0, h * 0.7, 0, h)
+    botGrad.addColorStop(0, 'rgba(6, 12, 24, 0)')
+    botGrad.addColorStop(0.4, 'rgba(6, 12, 24, 0.3)')
+    botGrad.addColorStop(1, 'rgba(6, 12, 24, 0.8)')
+    ctx.fillStyle = botGrad
+    ctx.fillRect(0, h * 0.7, w, h * 0.3)
+
     // Color grading overlay per scene (warm for lobby, cool for ICU, etc.)
     const idx = getSceneIndex(depthRef.current)
     const overlays = [
