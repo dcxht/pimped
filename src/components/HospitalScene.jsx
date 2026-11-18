@@ -259,102 +259,100 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
   if (!sp) return
   const { ext, bg } = sp
 
-  // Sky from tileset blue
+  // Sky - only top 25%
   ctx.fillStyle = '#0098dc'
-  ctx.fillRect(0, y, w, h * 0.72)
-  // Sky gradient lighter at top
-  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.72)
-  skyG.addColorStop(0, 'rgba(90,185,232,0.6)')
+  ctx.fillRect(0, y, w, h * 0.25)
+  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.25)
+  skyG.addColorStop(0, 'rgba(90,185,232,0.5)')
   skyG.addColorStop(1, 'rgba(0,152,220,0)')
   ctx.fillStyle = skyG
-  ctx.fillRect(0, y, w, h * 0.72)
+  ctx.fillRect(0, y, w, h * 0.25)
 
-  // Ground
+  // Ground - bottom 15%
   ctx.fillStyle = '#858585'
-  ctx.fillRect(0, y + h * 0.72, w, h * 0.28)
-  // Sidewalk
+  ctx.fillRect(0, y + h * 0.85, w, h * 0.15)
   ctx.fillStyle = '#b4b4b4'
-  ctx.fillRect(0, y + h * 0.72, w, h * 0.06)
+  ctx.fillRect(0, y + h * 0.85, w, h * 0.04)
 
-  // Clouds (correct aspect ratio)
+  // Clouds (bigger)
   if (bg?.ok) {
     const drift = (t * 0.008) % (w * 1.5)
-    ctx.globalAlpha = 0.65
-    const cloudH = px * 12
-    drAR(ctx, bg, SP.bgCloud, drift - w * 0.3, y + h * 0.05, cloudH)
-    drAR(ctx, bg, SP.bgCloud, drift + w * 0.2, y + h * 0.14, cloudH * 0.75)
-    drAR(ctx, bg, SP.bgCloud, drift - w * 0.1 + w * 0.6, y + h * 0.08, cloudH * 0.6)
+    ctx.globalAlpha = 0.7
+    drAR(ctx, bg, SP.bgCloud, drift - w * 0.2, y + h * 0.02, px * 16)
+    drAR(ctx, bg, SP.bgCloud, drift + w * 0.3, y + h * 0.08, px * 12)
+    drAR(ctx, bg, SP.bgCloud, drift + w * 0.7, y + h * 0.04, px * 10)
     ctx.globalAlpha = 1
 
-    // Sun (correct aspect ratio)
-    drAR(ctx, bg, SP.bgSun, w * 0.82, y + h * 0.03, px * 12)
+    // Sun
+    drAR(ctx, bg, SP.bgSun, w * 0.85, y + h * 0.01, px * 14)
 
-    // City silhouette (tiled across width)
-    ctx.globalAlpha = 0.2
-    drTile(ctx, bg, SP.bgCity, 0, y + h * 0.52, w, px * 12)
+    // City silhouette
+    ctx.globalAlpha = 0.25
+    drTile(ctx, bg, SP.bgCity, 0, y + h * 0.18, w, px * 10)
     ctx.globalAlpha = 1
   }
 
-  // Hospital building - rendered at CORRECT aspect ratio
+  // Hospital building - FILLS most of the screen
   if (ext?.ok) {
-    // Building width = 256 * pxScale, centered
-    const bw = 256 * px * 0.9
+    const bw = w * 0.95  // almost full width
     const bx = (w - bw) / 2
 
-    // Stack 3 facade sections at correct proportions
-    const topH = 80 * px * 0.9
-    const midH = 96 * px * 0.9
-    const botH = 64 * px * 0.9
-    const totalH = topH + midH + botH
-    const by = y + h * 0.72 - totalH - h * 0.04 // building sits on ground
+    // Building fills from sky to ground (y+25% to y+85%)
+    const buildTop = y + h * 0.22
+    const buildBot = y + h * 0.85
+    const totalH = buildBot - buildTop
+
+    // Split into 3 bands proportionally (80:96:64 = 240 total)
+    const topH = totalH * (80 / 240)
+    const midH = totalH * (96 / 240)
+    const botH = totalH * (64 / 240)
 
     // Building shadow
-    ctx.fillStyle = 'rgba(26,25,50,0.15)'
-    ctx.fillRect(bx + 8, by + 8, bw, totalH)
+    ctx.fillStyle = 'rgba(26,25,50,0.12)'
+    ctx.fillRect(bx + 6, buildTop + 6, bw, totalH)
 
-    // 3 facade bands at correct aspect ratios
-    dr(ctx, ext, SP.extTop, bx, by, bw, topH)
-    dr(ctx, ext, SP.extMid, bx, by + topH, bw, midH)
-    dr(ctx, ext, SP.extBot, bx, by + topH + midH, bw, botH)
+    // 3 facade bands filling the building area
+    dr(ctx, ext, SP.extTop, bx, buildTop, bw, topH)
+    dr(ctx, ext, SP.extMid, bx, buildTop + topH, bw, midH)
+    dr(ctx, ext, SP.extBot, bx, buildTop + topH + midH, bw, botH)
 
-    // Window glow overlay
+    // Window glow
     for (let r = 0; r < 3; r++) {
-      for (let c = 0; c < 5; c++) {
+      for (let c = 0; c < 6; c++) {
         if (Math.sin(t * 0.0008 + r * 2.3 + c * 1.7) < -0.3) continue
         const fl = 0.3 + 0.2 * Math.sin(t * 0.002 + r + c * 3)
         ctx.globalAlpha = fl * 0.08
         ctx.fillStyle = '#ffb84d'
-        const ww = bw * 0.06, wh = topH * 0.35
-        ctx.fillRect(bx + bw * 0.08 + c * bw * 0.18, by + r * (totalH / 3) + (totalH / 3 - wh) / 2, ww, wh)
+        const ww = bw * 0.05, wh = topH * 0.4
+        ctx.fillRect(bx + bw * 0.06 + c * bw * 0.15, buildTop + r * (totalH / 3) + (totalH / 3 - wh) / 2, ww, wh)
       }
     }
     ctx.globalAlpha = 1
 
-    // "HOSPITAL" text (correct aspect ratio)
-    const textH = px * 8
-    const textW = drAR(ctx, ext, SP.extText, 0, 0, 0) // just get width
-    drAR(ctx, ext, SP.extText, w / 2 - (172 / 18 * textH) / 2, by - textH - px * 4, textH)
+    // "HOSPITAL" text above building
+    const textH = px * 10
+    drAR(ctx, ext, SP.extText, w / 2 - (172 / 18 * textH) / 2, buildTop - textH - px * 2, textH)
 
-    // Ambulances at correct aspect ratio
-    const ambH = px * 22
-    drAR(ctx, ext, SP.extAmb1, w * 0.05, y + h * 0.72 + h * 0.02, ambH)
-    drAR(ctx, ext, SP.extAmb2, w * 0.6, y + h * 0.72 + h * 0.03, ambH * 0.85)
+    // Ambulances (bigger, on the ground)
+    const ambH = px * 28
+    drAR(ctx, ext, SP.extAmb1, w * 0.03, y + h * 0.86, ambH)
+    drAR(ctx, ext, SP.extAmb2, w * 0.55, y + h * 0.87, ambH * 0.9)
 
     // Ambulance flashing light
     if (Math.sin(t * 0.008) > 0) {
       ctx.globalAlpha = 0.5
       ctx.fillStyle = '#c42430'
       ctx.beginPath()
-      ctx.arc(w * 0.05 + ambH * 0.3, y + h * 0.72 + h * 0.02 - 3, 4, 0, Math.PI * 2)
+      ctx.arc(w * 0.03 + ambH * 0.4, y + h * 0.86 - 3, 5, 0, Math.PI * 2)
       ctx.fill()
       ctx.globalAlpha = 1
     }
   }
 
-  // Road markings on ground
+  // Road markings
   ctx.fillStyle = '#FFD54F'
   for (let x = ((t * 0.015) % 60) - 30; x < w; x += 60) {
-    ctx.fillRect(x, y + h * 0.88, 20, 3)
+    ctx.fillRect(x, y + h * 0.93, 20, 3)
   }
 }
 
