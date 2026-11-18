@@ -91,16 +91,16 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     const canvasAspect = w / h
     const time = (t || 0) * 0.001
 
-    // Ken Burns: slow pan across the image (creates life)
-    const panX = Math.sin(time * 0.15) * 20
-    const panY = Math.cos(time * 0.1) * 12
+    // Ken Burns: very gentle pan (subtle life, don't lose context)
+    const panX = Math.sin(time * 0.12) * 8
+    const panY = Math.cos(time * 0.08) * 5
 
-    // Breathing zoom (slow, subtle)
-    const breath = 1.08 + 0.04 * Math.sin(time * 0.5)
+    // Breathing zoom (barely noticeable - keep the scene recognizable)
+    const breath = 1.02 + 0.01 * Math.sin(time * 0.4)
 
-    // Mouse/touch parallax (stronger than before)
-    const mx = (mouseRef.current.x - 0.5) * 40
-    const my = (mouseRef.current.y - 0.5) * 25
+    // Mouse/touch parallax (gentle)
+    const mx = (mouseRef.current.x - 0.5) * 15
+    const my = (mouseRef.current.y - 0.5) * 10
 
     let dw, dh, dx, dy
     if (canvasAspect > imgAspect) {
@@ -119,11 +119,11 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     // Color grading overlay per scene (warm for lobby, cool for ICU, etc.)
     const idx = getSceneIndex(depthRef.current)
     const overlays = [
-      'rgba(20, 30, 60, 0.15)',   // exterior: cool blue night
-      'rgba(60, 40, 20, 0.1)',    // lobby: warm amber
-      'rgba(10, 40, 40, 0.12)',   // ward: teal
-      'rgba(10, 10, 30, 0.2)',    // icu: dark blue
-      'rgba(5, 5, 15, 0.25)',     // or: near black
+      'rgba(20, 30, 60, 0.08)',   // exterior: very subtle cool blue
+      'rgba(60, 40, 20, 0.05)',   // lobby: barely warm
+      'rgba(10, 40, 40, 0.06)',   // ward: hint of teal
+      'rgba(10, 10, 30, 0.1)',    // icu: slight dark
+      'rgba(5, 5, 15, 0.12)',     // or: subtle dark
     ]
     ctx.fillStyle = overlays[idx] || 'rgba(0,0,0,0)'
     ctx.fillRect(0, 0, w, h)
@@ -155,7 +155,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
 
   // Scanline overlay
   const drawScanlines = useCallback((ctx, w, h) => {
-    ctx.fillStyle = 'rgba(0,0,0,0.04)'
+    ctx.fillStyle = 'rgba(0,0,0,0.02)'
     for (let y = 0; y < h; y += 3) {
       ctx.fillRect(0, y, w, 1)
     }
@@ -167,7 +167,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     const r = Math.max(w, h) * 0.7
     const grad = ctx.createRadialGradient(cx, cy, r * 0.4, cx, cy, r)
     grad.addColorStop(0, 'rgba(0,0,0,0)')
-    grad.addColorStop(1, 'rgba(0,0,0,0.45)')
+    grad.addColorStop(1, 'rgba(0,0,0,0.25)')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
   }, [])
