@@ -42,9 +42,26 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
   const particlesRef = useRef(createParticles())
   const rafRef = useRef(null)
   const depthRef = useRef(depth)
+  const mouseRef = useRef({ x: 0.5, y: 0.5 }) // normalized mouse pos for parallax
+  const smoothDepthRef = useRef(depth) // for smooth transitions
 
   // Keep depth in a ref so the animation loop always sees the latest value
   depthRef.current = depth
+
+  // Track mouse/touch for parallax effect
+  useEffect(() => {
+    const handleMove = (e) => {
+      const x = (e.touches ? e.touches[0].clientX : e.clientX) / window.innerWidth
+      const y = (e.touches ? e.touches[0].clientY : e.clientY) / window.innerHeight
+      mouseRef.current = { x, y }
+    }
+    window.addEventListener('mousemove', handleMove, { passive: true })
+    window.addEventListener('touchmove', handleMove, { passive: true })
+    return () => {
+      window.removeEventListener('mousemove', handleMove)
+      window.removeEventListener('touchmove', handleMove)
+    }
+  }, [])
 
   // Load all scene images once on mount
   useEffect(() => {
@@ -67,22 +84,30 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     return () => { cancelled = true }
   }, [])
 
-  // Draw an image to cover the canvas (like CSS background-size: cover, centered)
-  const drawCover = useCallback((ctx, img, w, h, alpha) => {
+  // Draw an image with cover-fit, parallax offset, and subtle breathing zoom
+  const drawCover = useCallback((ctx, img, w, h, alpha, t) => {
     if (!img || alpha <= 0) return
     const imgAspect = img.width / img.height
     const canvasAspect = w / h
+
+    // Subtle breathing zoom (1.02 - 1.05 scale, slow)
+    const breath = 1.03 + 0.02 * Math.sin((t || 0) * 0.0008)
+
+    // Parallax shift based on mouse/touch (subtle, +-15px)
+    const mx = (mouseRef.current.x - 0.5) * 30
+    const my = (mouseRef.current.y - 0.5) * 20
+
     let dw, dh, dx, dy
     if (canvasAspect > imgAspect) {
-      dw = w
-      dh = w / imgAspect
-      dx = 0
-      dy = (h - dh) / 2
+      dw = w * breath
+      dh = (w / imgAspect) * breath
+      dx = (w - dw) / 2 + mx
+      dy = (h - dh) / 2 + my
     } else {
-      dh = h
-      dw = h * imgAspect
-      dx = (w - dw) / 2
-      dy = 0
+      dh = h * breath
+      dw = (h * imgAspect) * breath
+      dx = (w - dw) / 2 + mx
+      dy = (h - dh) / 2 + my
     }
     ctx.globalAlpha = alpha
     ctx.drawImage(img, dx, dy, dw, dh)
@@ -215,8 +240,8 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
           blendAlpha = distFromPrev / CROSSFADE_RANGE
           blendImg = imagesRef.current[SCENES[idx - 1].src]
           // Swap: prev scene fades out, current fades in
-          drawCover(ctx, blendImg, w, h, 1 - blendAlpha)
-          drawCover(ctx, img, w, h, blendAlpha)
+          drawCover(ctx, blendImg, w, h, 1 - blendAlpha, t)
+          drawCover(ctx, img, w, h, blendAlpha, t)
           // skip the normal draw below
           blendImg = null
           blendAlpha = 0
@@ -225,11 +250,11 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
 
       if (blendAlpha === 0 && blendImg === null) {
         // No crossfade, draw current scene at full opacity
-        drawCover(ctx, img, w, h, 1)
+        drawCover(ctx, img, w, h, 1, t)
       } else if (blendImg) {
         // Crossfading into next scene
-        drawCover(ctx, img, w, h, 1 - blendAlpha)
-        drawCover(ctx, blendImg, w, h, blendAlpha)
+        drawCover(ctx, img, w, h, 1 - blendAlpha, t)
+        drawCover(ctx, blendImg, w, h, blendAlpha, t)
       }
 
       // -- Overlays --
