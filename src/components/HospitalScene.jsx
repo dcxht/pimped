@@ -84,33 +84,50 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
     return () => { cancelled = true }
   }, [])
 
-  // Draw an image with cover-fit, parallax offset, and subtle breathing zoom
+  // Draw scene image with Ken Burns pan, parallax, and depth
   const drawCover = useCallback((ctx, img, w, h, alpha, t) => {
     if (!img || alpha <= 0) return
     const imgAspect = img.width / img.height
     const canvasAspect = w / h
+    const time = (t || 0) * 0.001
 
-    // Subtle breathing zoom (1.02 - 1.05 scale, slow)
-    const breath = 1.03 + 0.02 * Math.sin((t || 0) * 0.0008)
+    // Ken Burns: slow pan across the image (creates life)
+    const panX = Math.sin(time * 0.15) * 20
+    const panY = Math.cos(time * 0.1) * 12
 
-    // Parallax shift based on mouse/touch (subtle, +-15px)
-    const mx = (mouseRef.current.x - 0.5) * 30
-    const my = (mouseRef.current.y - 0.5) * 20
+    // Breathing zoom (slow, subtle)
+    const breath = 1.08 + 0.04 * Math.sin(time * 0.5)
+
+    // Mouse/touch parallax (stronger than before)
+    const mx = (mouseRef.current.x - 0.5) * 40
+    const my = (mouseRef.current.y - 0.5) * 25
 
     let dw, dh, dx, dy
     if (canvasAspect > imgAspect) {
       dw = w * breath
       dh = (w / imgAspect) * breath
-      dx = (w - dw) / 2 + mx
-      dy = (h - dh) / 2 + my
     } else {
       dh = h * breath
       dw = (h * imgAspect) * breath
-      dx = (w - dw) / 2 + mx
-      dy = (h - dh) / 2 + my
     }
+    dx = (w - dw) / 2 + mx + panX
+    dy = (h - dh) / 2 + my + panY
+
     ctx.globalAlpha = alpha
     ctx.drawImage(img, dx, dy, dw, dh)
+
+    // Color grading overlay per scene (warm for lobby, cool for ICU, etc.)
+    const idx = getSceneIndex(depthRef.current)
+    const overlays = [
+      'rgba(20, 30, 60, 0.15)',   // exterior: cool blue night
+      'rgba(60, 40, 20, 0.1)',    // lobby: warm amber
+      'rgba(10, 40, 40, 0.12)',   // ward: teal
+      'rgba(10, 10, 30, 0.2)',    // icu: dark blue
+      'rgba(5, 5, 15, 0.25)',     // or: near black
+    ]
+    ctx.fillStyle = overlays[idx] || 'rgba(0,0,0,0)'
+    ctx.fillRect(0, 0, w, h)
+
     ctx.globalAlpha = 1
   }, [])
 
