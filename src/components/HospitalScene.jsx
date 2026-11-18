@@ -294,7 +294,7 @@ export default function HospitalScene({ depth = 0, maxDepth = 2500 }) {
       drawDepthMarkers(ctx, w, h, sd, maxDepth)
 
       // ========== 11. EKG LINE ==========
-      if (depthNorm > 0.25) drawEKG(ctx, w, h, t, depthNorm)
+      if (depthNorm >= 0.055) drawEKG(ctx, w, h, t, depthNorm)
 
       // ========== 12. STATUS LIGHTS ==========
       drawStatusLights(ctx, w, h, t, depthNorm)
@@ -587,9 +587,9 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
     { x: 0.92, y: 0.8, sprite: 'ivPole4' },
   ]
   for (const iv of ivItems) {
-    const visible = iv.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = iv.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
-    const a = Math.min(0.5, (depthNorm * 0.8 + 0.15 - (iv.y - entranceY)) * 2.5)
+    const a = Math.min(0.5, (depthNorm * 0.8 + 0.6 - (iv.y - entranceY)) * 2.5)
     ctx.globalAlpha = a
     const ivW = ts16
     const ivH = 48 * tileScale
@@ -622,9 +622,9 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ]
   for (const m of monitors) {
     const mx = m.x * w, my = m.y * h
-    const visible = m.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = m.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
-    const a = Math.min(0.55, (depthNorm * 0.8 + 0.15 - (m.y - entranceY)) * 2.5)
+    const a = Math.min(0.55, (depthNorm * 0.8 + 0.6 - (m.y - entranceY)) * 2.5)
     ctx.globalAlpha = a
 
     const monW = ts32
@@ -664,7 +664,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ]
   for (const b of beds) {
     const bx = b.x * w, by = b.y * h
-    const visible = b.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = b.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
     ctx.globalAlpha = 0.35
     const bedW = ts32 * 1.2
@@ -686,9 +686,9 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
     { x: 0.03, y: 0.85, sprite: 'vendingMachine3' },
   ]
   for (const v of vending) {
-    const visible = v.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = v.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
-    const a = Math.min(0.4, (depthNorm * 0.8 + 0.15 - (v.y - entranceY)) * 2)
+    const a = Math.min(0.4, (depthNorm * 0.8 + 0.6 - (v.y - entranceY)) * 2)
     ctx.globalAlpha = a
     const vendW = ts32
     const vendH = 48 * tileScale
@@ -702,9 +702,9 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
     { x: 0.7, y: 0.5, sprite: 'waitingChairs' },
   ]
   for (const c of chairs) {
-    const visible = c.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = c.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
-    const a = Math.min(0.4, (depthNorm * 0.8 + 0.15 - (c.y - entranceY)) * 2)
+    const a = Math.min(0.4, (depthNorm * 0.8 + 0.6 - (c.y - entranceY)) * 2)
     ctx.globalAlpha = a
     const chairW = 48 * tileScale
     const chairH = ts32
@@ -713,7 +713,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Reception desk (lobby) ---
-  if (depthNorm > 0.05) {
+  if (depthNorm >= 0) {
     const rdA = Math.min(0.45, (depthNorm - 0.05) * 1.5)
     ctx.globalAlpha = rdA
     const rdW = 80 * tileScale
@@ -723,7 +723,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Doors along the walls ---
-  if (depthNorm > 0.2) {
+  if (depthNorm >= 0.05) {
     const doorA = Math.min(0.3, (depthNorm - 0.2) * 0.6)
     ctx.globalAlpha = doorA
     const doorW = ts32
@@ -736,7 +736,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- X-ray screens (radiology) ---
-  if (depthNorm > 0.35) {
+  if (depthNorm >= 0.15) {
     const xrA = Math.min(0.45, (depthNorm - 0.35) * 1.5)
     ctx.globalAlpha = xrA
     const xrS = ts32
@@ -746,7 +746,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- MRI machine (deep in radiology) ---
-  if (depthNorm > 0.4) {
+  if (depthNorm >= 0.15) {
     const mriA = Math.min(0.4, (depthNorm - 0.4) * 1.2)
     ctx.globalAlpha = mriA
     const mriW = 96 * tileScale
@@ -756,7 +756,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Hazard symbol near MRI (pulsing) ---
-  if (depthNorm > 0.45) {
+  if (depthNorm >= 0.155) {
     const hzA = Math.min(0.4, (depthNorm - 0.45))
     const pulse = 0.6 + 0.4 * Math.sin(t * 0.004)
     ctx.globalAlpha = hzA * pulse
@@ -766,7 +766,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Surgical lights (OR depth) ---
-  if (depthNorm > 0.5) {
+  if (depthNorm >= 0.25) {
     const slA = Math.min(0.35, (depthNorm - 0.5) * 0.8)
     ctx.globalAlpha = slA
     const slS = 48 * tileScale
@@ -777,7 +777,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Scrubs rack (deep) ---
-  if (depthNorm > 0.55) {
+  if (depthNorm >= 0.255) {
     const srA = Math.min(0.3, (depthNorm - 0.55) * 0.8)
     ctx.globalAlpha = srA
     const srW = 80 * tileScale
@@ -793,9 +793,9 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
     { x: 0.25, y: 0.76, sprite: 'flower', sheet: 'patient' },
   ]
   for (const item of details) {
-    const visible = item.y - entranceY < depthNorm * 0.8 + 0.15
+    const visible = item.y - entranceY < depthNorm * 0.8 + 0.6
     if (!visible) continue
-    const a = Math.min(0.4, (depthNorm * 0.8 + 0.15 - (item.y - entranceY)) * 2)
+    const a = Math.min(0.4, (depthNorm * 0.8 + 0.6 - (item.y - entranceY)) * 2)
     ctx.globalAlpha = a
     const sheet = sp ? sp[item.sheet] : null
     drawSprite(ctx, sheet, item.sprite, item.x * w, item.y * h, ts16, ts16)
@@ -803,7 +803,7 @@ function drawInteriorScenery(ctx, w, h, entranceY, t, depthNorm, sp) {
   ctx.globalAlpha = 1
 
   // --- Wall-mounted monitors (lobby) ---
-  if (depthNorm > 0.1) {
+  if (depthNorm >= 0) {
     const wmA = Math.min(0.35, (depthNorm - 0.1) * 0.8)
     ctx.globalAlpha = wmA
     const wmW = 48 * tileScale
