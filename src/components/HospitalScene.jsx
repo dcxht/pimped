@@ -395,10 +395,21 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
     ctx.fillStyle = 'rgba(2,4,10,0.2)'
     ctx.fillRect(bx + 8, buildTop + 8, bw, totalH)
 
-    // 3 facade bands filling the building area
+    // 3 facade bands - dimmed so they don't compete with UI text
+    ctx.globalAlpha = 0.55
     dr(ctx, ext, SP.extTop, bx, buildTop, bw, topH)
     dr(ctx, ext, SP.extMid, bx, buildTop + topH, bw, midH)
     dr(ctx, ext, SP.extBot, bx, buildTop + topH + midH, bw, botH)
+    ctx.globalAlpha = 1
+
+    // Dark wash over building to push it further into background
+    const washG = ctx.createLinearGradient(0, buildTop, 0, buildBot)
+    washG.addColorStop(0, 'rgba(2,4,10,0.35)')
+    washG.addColorStop(0.4, 'rgba(2,4,10,0.15)')
+    washG.addColorStop(0.7, 'rgba(2,4,10,0.2)')
+    washG.addColorStop(1, 'rgba(2,4,10,0.4)')
+    ctx.fillStyle = washG
+    ctx.fillRect(bx, buildTop, bw, totalH)
 
     // Warm window glow (more prominent, animated)
     for (let r = 0; r < 3; r++) {
@@ -422,10 +433,12 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
     const textH = px * 10
     drAR(ctx, ext, SP.extText, w / 2 - (172 / 18 * textH) / 2, buildTop - textH - px * 2, textH)
 
-    // Ambulances (bigger, on the ground)
+    // Ambulances (dimmed to match atmosphere)
+    ctx.globalAlpha = 0.5
     const ambH = px * 28
     drAR(ctx, ext, SP.extAmb1, w * 0.03, y + h * 0.86, ambH)
     drAR(ctx, ext, SP.extAmb2, w * 0.55, y + h * 0.87, ambH * 0.9)
+    ctx.globalAlpha = 1
 
     // Ambulance flashing light
     if (Math.sin(t * 0.008) > 0) {
@@ -455,12 +468,15 @@ function drawInterior(ctx, idx, y, w, h, t, sp, px) {
   const iR = w - wallW - 10
   const iW = iR - iL
 
+  // Interior sprites drawn slightly dimmed so they're atmospheric background
+  ctx.globalAlpha = 0.65
   switch (idx) {
     case 1: drawLobby(ctx, y, w, h, t, sp, px, iL, iR, iW); break
     case 2: drawWard(ctx, y, w, h, t, sp, px, iL, iR, iW); break
     case 3: drawICU(ctx, y, w, h, t, sp, px, iL, iR, iW); break
     case 4: drawOR(ctx, y, w, h, t, sp, px, iL, iR, iW); break
   }
+  ctx.globalAlpha = 1
 
   // Floor name watermark
   ctx.globalAlpha = 0.06
