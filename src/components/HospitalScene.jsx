@@ -318,14 +318,21 @@ function drawRoomBG(ctx, y, w, h, sp) {
   ctx.fillStyle = '#3a4858'
   ctx.fillRect(0, y + h * 0.82 - 1, w, 1)
 
-  // Side walls (darker, more depth)
-  const wallW = w * 0.05
-  ctx.fillStyle = '#1a2434'
-  ctx.fillRect(0, y, wallW, h)
-  ctx.fillRect(w - wallW, y, wallW, h)
-  ctx.fillStyle = '#3a4858'
-  ctx.fillRect(wallW, y, 2, h)
-  ctx.fillRect(w - wallW - 2, y, 2, h)
+  // Side walls with gradient fade (no hard edge)
+  const wallW = w * 0.08
+  const lWall = ctx.createLinearGradient(0, 0, wallW * 1.5, 0)
+  lWall.addColorStop(0, '#0e1420')
+  lWall.addColorStop(0.6, '#1a2434')
+  lWall.addColorStop(1, 'rgba(26,36,52,0)')
+  ctx.fillStyle = lWall
+  ctx.fillRect(0, y, wallW * 1.5, h)
+
+  const rWall = ctx.createLinearGradient(w - wallW * 1.5, 0, w, 0)
+  rWall.addColorStop(0, 'rgba(26,36,52,0)')
+  rWall.addColorStop(0.4, '#1a2434')
+  rWall.addColorStop(1, '#0e1420')
+  ctx.fillStyle = rWall
+  ctx.fillRect(w - wallW * 1.5, y, wallW * 1.5, h)
 }
 
 // ── FLOOR 0: EXTERIOR ─────────────────────────────
@@ -333,20 +340,17 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
   if (!sp) return
   const { ext, bg } = sp
 
-  // Sky - deeper, richer like Krillion's teal-to-navy
-  const skyG = ctx.createLinearGradient(0, y, 0, y + h * 0.28)
-  skyG.addColorStop(0, '#1a3a5c')
-  skyG.addColorStop(0.4, '#1e4a6a')
-  skyG.addColorStop(0.7, '#245878')
-  skyG.addColorStop(1, '#2a6888')
-  ctx.fillStyle = skyG
-  ctx.fillRect(0, y, w, h * 0.28)
-
-  // Ground - bottom 15%
-  ctx.fillStyle = '#1a1932'
-  ctx.fillRect(0, y + h * 0.85, w, h * 0.15)
-  ctx.fillStyle = '#2a2942'
-  ctx.fillRect(0, y + h * 0.85, w, h * 0.04)
+  // Full-screen seamless gradient: sky → building tone → ground (no hard edges)
+  const fullG = ctx.createLinearGradient(0, y, 0, y + h)
+  fullG.addColorStop(0, '#1a3a5c')     // deep blue sky
+  fullG.addColorStop(0.15, '#1e4a6a')  // mid sky
+  fullG.addColorStop(0.25, '#2a3a4a')  // building top tone
+  fullG.addColorStop(0.5, '#1e2e3e')   // building mid
+  fullG.addColorStop(0.75, '#1a2838')  // building lower
+  fullG.addColorStop(0.85, '#141e28')  // ground transition
+  fullG.addColorStop(1, '#0e1420')     // deep ground
+  ctx.fillStyle = fullG
+  ctx.fillRect(0, y, w, h)
 
   // Clouds (bigger)
   if (bg?.ok) {
@@ -391,25 +395,41 @@ function drawExterior(ctx, y, w, h, t, sp, px) {
     ctx.fillStyle = glow
     ctx.fillRect(0, y, w, h)
 
-    // Building shadow
-    ctx.fillStyle = 'rgba(2,4,10,0.2)'
-    ctx.fillRect(bx + 8, buildTop + 8, bw, totalH)
-
-    // 3 facade bands - dimmed so they don't compete with UI text
-    ctx.globalAlpha = 0.55
+    // 3 facade bands - dimmed, atmospheric
+    ctx.globalAlpha = 0.45
     dr(ctx, ext, SP.extTop, bx, buildTop, bw, topH)
     dr(ctx, ext, SP.extMid, bx, buildTop + topH, bw, midH)
     dr(ctx, ext, SP.extBot, bx, buildTop + topH + midH, bw, botH)
     ctx.globalAlpha = 1
 
-    // Dark wash over building to push it further into background
-    const washG = ctx.createLinearGradient(0, buildTop, 0, buildBot)
-    washG.addColorStop(0, 'rgba(2,4,10,0.35)')
-    washG.addColorStop(0.4, 'rgba(2,4,10,0.15)')
-    washG.addColorStop(0.7, 'rgba(2,4,10,0.2)')
-    washG.addColorStop(1, 'rgba(2,4,10,0.4)')
-    ctx.fillStyle = washG
-    ctx.fillRect(bx, buildTop, bw, totalH)
+    // Blend building edges into background (no hard rectangle)
+    // Top edge fade
+    const topFade = ctx.createLinearGradient(0, buildTop - 10, 0, buildTop + totalH * 0.12)
+    topFade.addColorStop(0, '#2a3a4a')
+    topFade.addColorStop(1, 'rgba(42,58,74,0)')
+    ctx.fillStyle = topFade
+    ctx.fillRect(bx - 20, buildTop - 10, bw + 40, totalH * 0.15)
+
+    // Bottom edge fade
+    const botFade = ctx.createLinearGradient(0, buildBot - totalH * 0.12, 0, buildBot + 10)
+    botFade.addColorStop(0, 'rgba(20,30,40,0)')
+    botFade.addColorStop(1, '#141e28')
+    ctx.fillStyle = botFade
+    ctx.fillRect(bx - 20, buildBot - totalH * 0.15, bw + 40, totalH * 0.15 + 10)
+
+    // Left edge fade
+    const leftFade = ctx.createLinearGradient(bx - 15, 0, bx + bw * 0.08, 0)
+    leftFade.addColorStop(0, 'rgba(26,40,56,0.9)')
+    leftFade.addColorStop(1, 'rgba(26,40,56,0)')
+    ctx.fillStyle = leftFade
+    ctx.fillRect(bx - 15, buildTop, bw * 0.1 + 15, totalH)
+
+    // Right edge fade
+    const rightFade = ctx.createLinearGradient(bx + bw - bw * 0.08, 0, bx + bw + 15, 0)
+    rightFade.addColorStop(0, 'rgba(26,40,56,0)')
+    rightFade.addColorStop(1, 'rgba(26,40,56,0.9)')
+    ctx.fillStyle = rightFade
+    ctx.fillRect(bx + bw - bw * 0.1, buildTop, bw * 0.1 + 15, totalH)
 
     // Warm window glow (more prominent, animated)
     for (let r = 0; r < 3; r++) {
