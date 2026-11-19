@@ -333,6 +333,21 @@ function drawRoomBG(ctx, y, w, h, sp) {
   rWall.addColorStop(1, '#0e1420')
   ctx.fillStyle = rWall
   ctx.fillRect(w - wallW * 1.5, y, wallW * 1.5, h)
+
+  // Ambient overhead lighting (warm glow from ceiling lights)
+  const lightGlow = ctx.createRadialGradient(w * 0.5, y + h * 0.05, 0, w * 0.5, y + h * 0.3, w * 0.4)
+  lightGlow.addColorStop(0, 'rgba(255,220,160,0.06)')
+  lightGlow.addColorStop(0.5, 'rgba(255,200,140,0.025)')
+  lightGlow.addColorStop(1, 'rgba(255,200,140,0)')
+  ctx.fillStyle = lightGlow
+  ctx.fillRect(0, y, w, h * 0.6)
+
+  // Secondary light on the right
+  const light2 = ctx.createRadialGradient(w * 0.75, y + h * 0.1, 0, w * 0.75, y + h * 0.25, w * 0.25)
+  light2.addColorStop(0, 'rgba(200,230,255,0.04)')
+  light2.addColorStop(1, 'rgba(200,230,255,0)')
+  ctx.fillStyle = light2
+  ctx.fillRect(w * 0.5, y, w * 0.5, h * 0.5)
 }
 
 // ── FLOOR 0: EXTERIOR ─────────────────────────────
@@ -488,8 +503,8 @@ function drawInterior(ctx, idx, y, w, h, t, sp, px) {
   const iR = w - wallW - 10
   const iW = iR - iL
 
-  // Interior sprites drawn slightly dimmed so they're atmospheric background
-  ctx.globalAlpha = 0.65
+  // Interior sprites - visible enough to be recognizable, atmospheric enough to not compete
+  ctx.globalAlpha = 0.72
   switch (idx) {
     case 1: drawLobby(ctx, y, w, h, t, sp, px, iL, iR, iW); break
     case 2: drawWard(ctx, y, w, h, t, sp, px, iL, iR, iW); break
@@ -497,6 +512,18 @@ function drawInterior(ctx, idx, y, w, h, t, sp, px) {
     case 4: drawOR(ctx, y, w, h, t, sp, px, iL, iR, iW); break
   }
   ctx.globalAlpha = 1
+
+  // Floor-specific accent color ambient glow
+  const accentColors = [null, 'rgba(224,116,56,', 'rgba(90,197,79,', 'rgba(0,205,249,', 'rgba(196,36,48,']
+  const ac = accentColors[idx]
+  if (ac) {
+    const acGlow = ctx.createRadialGradient(w * 0.5, y + h * 0.5, 0, w * 0.5, y + h * 0.5, w * 0.5)
+    acGlow.addColorStop(0, ac + '0.03)')
+    acGlow.addColorStop(0.5, ac + '0.015)')
+    acGlow.addColorStop(1, ac + '0)')
+    ctx.fillStyle = acGlow
+    ctx.fillRect(0, y, w, h)
+  }
 
   // Floor name watermark
   ctx.globalAlpha = 0.06
